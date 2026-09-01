@@ -1,0 +1,264 @@
+<div class="thread-detail-container">
+  <!-- Botón de volver -->
+  <div class="back-nav">
+    <a [routerLink]="['/discussion']" class="back-link">
+      <i class="fas fa-arrow-left me-2"></i>Volver al foro
+    </a>
+  </div>
+
+  <!-- Mensaje de error -->
+  <div class="alert alert-danger" *ngIf="error" role="alert">
+    <i class="fas fa-exclamation-triangle me-2"></i>
+    {{ error }}
+    <button type="button" class="btn-close" (click)="error = null">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <!-- Loading state -->
+  <div class="loading-state" *ngIf="isLoading">
+    <div class="loader">
+      <div class="spinner"></div>
+      <p>Cargando hilo...</p>
+    </div>
+  </div>
+
+  <!-- Hilo principal -->
+  <div class="thread-main" *ngIf="thread && !isLoading">
+    <div class="thread-card detailed">
+      <div class="thread-header">
+        <div *ngIf="!isEditingThread">
+          <h1 class="thread-title">{{ thread.title }}</h1>
+        </div>
+        <div *ngIf="isEditingThread" class="edit-form mb-3">
+          <input type="text" [(ngModel)]="editedThreadTitle" class="form-control mb-2" placeholder="Título del hilo">
+        </div>
+
+        <div class="thread-meta">
+          <span class="thread-date">
+            <i class="fas fa-clock me-1"></i>Publicado {{ formatTimeAgo(thread.created_at) }}
+          </span>
+          <span class="thread-author">
+            <i class="fas fa-user me-1"></i>Usuario {{ thread.author_fingerprint.substring(0, 8) }}
+          </span>
+
+          <!-- Admin Actions -->
+          <div *ngIf="isAdmin" class="admin-actions ms-auto">
+            <button *ngIf="!isEditingThread" class="btn-admin btn-edit" (click)="startEditThread()" title="Editar">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button *ngIf="!isEditingThread" class="btn-admin btn-delete" (click)="deleteThread()" title="Eliminar">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="thread-image-container" *ngIf="thread.image_url">
+        <img [src]="thread.image_url" alt="Imagen del hilo" class="thread-image-full">
+      </div>
+
+      <div class="thread-content detailed">
+        <p *ngIf="!isEditingThread">{{ thread.content }}</p>
+        <div *ngIf="isEditingThread" class="edit-form">
+          <textarea [(ngModel)]="editedThreadContent" class="form-control mb-3" rows="6"></textarea>
+          <div class="d-flex gap-2 justify-content-end">
+            <button class="btn-cancel" (click)="cancelEditThread()">Cancelar</button>
+            <button class="btn-save" (click)="saveThread()">Guardar Cambios</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="thread-stats detailed">
+        <button class="like-btn" (click)="likeThread(thread)" [class.liked]="thread.user_has_liked">
+          <i class="fas fa-heart"></i>
+          <span>{{ thread.likes_count }}</span>
+          <span class="label">Me gusta</span>
+        </button>
+
+        <div class="stat">
+          <i class="fas fa-comment"></i>
+          <span>{{ thread.comments_count }}</span>
+          <span class="label">Comentario{{ thread.comments_count !== 1 ? 's' : '' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Formulario de comentario -->
+    <div class="comment-form-section">
+      <div class="form-card">
+        <h3>
+          <i class="fas fa-reply me-2"></i>
+          {{ replyingTo ? 'Respondiendo a comentario...' : 'Agregar comentario' }}
+        </h3>
+
+        <div class="comment-form">
+          <textarea [ngModel]="replyingTo ? replyContent : newComment"
+            (ngModelChange)="replyingTo ? (replyContent = $event) : (newComment = $event)"
+            placeholder="{{ replyingTo ? 'Escribe tu respuesta...' : 'Comparte tu opinión sobre este tema...' }}"
+            rows="4"></textarea>
+
+          <div class="comment-actions" *ngIf="replyingTo">
+            <button class="btn-cancel" (click)="cancelReply()">
+              <i class="fas fa-times me-1"></i>Cancelar
+            </button>
+            <button class="btn-submit" (click)="addReply()" [disabled]="!replyContent.trim()">
+              <i class="fas fa-reply me-1"></i>Responder
+            </button>
+          </div>
+
+          <div class="comment-actions" *ngIf="!replyingTo">
+            <button class="btn-submit" (click)="addComment()" [disabled]="!newComment.trim()">
+              <i class="fas fa-paper-plane me-1"></i>Publicar comentario
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sección de comentarios -->
+    <div class="comments-section">
+      <div class="comments-header">
+        <h3>
+          <i class="fas fa-comments me-2"></i>
+          {{ thread.comments_count }} Comentario{{ thread.comments_count !== 1 ? 's' : '' }}
+        </h3>
+      </div>
+
+      <div class="empty-comments" *ngIf="comments.length === 0">
+        <div class="empty-state">
+          <i class="fas fa-comment-slash"></i>
+          <h4>¡Sé el primero en comentar!</h4>
+          <p>Aún no hay comentarios en este hilo. Comparte tu opinión.</p>
+        </div>
+      </div>
+
+      <div class="comments-list" *ngIf="comments.length > 0">
+        <div class="comment-item" *ngFor="let comment of comments"
+          [class.has-replies]="comment.replies && comment.replies.length > 0">
+
+          <!-- Comentario principal -->
+          <div class="comment-main">
+            <div class="comment-avatar">
+              <i class="fas fa-user"></i>
+            </div>
+
+            <div class="comment-content">
+              <div class="comment-header">
+                <span class="comment-author">
+                  <i class="fas fa-user me-1"></i>
+                  Usuario {{ comment.author_fingerprint.substring(0, 8) }}
+                </span>
+                <div class="d-flex align-items-center gap-2">
+                  <span class="comment-date">
+                    <i class="fas fa-clock me-1"></i>{{ formatTimeAgo(comment.created_at) }}
+                  </span>
+                  <!-- Admin Actions -->
+                  <div *ngIf="isAdmin && editingCommentId !== comment.id" class="admin-actions-mini">
+                    <button class="btn-mini-edit" (click)="startEditComment(comment)" title="Editar">
+                      <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-mini-delete" (click)="deleteComment(comment)" title="Eliminar">
+                      <i class="fas fa-trash-alt"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="comment-text">
+                <p *ngIf="editingCommentId !== comment.id">{{ comment.content }}</p>
+                <div *ngIf="editingCommentId === comment.id" class="edit-form-mini">
+                  <textarea [(ngModel)]="editedCommentContent" class="form-control mb-2" rows="2"></textarea>
+                  <div class="d-flex gap-2 justify-content-end">
+                    <button class="btn-mini-cancel" (click)="cancelEditComment()">Cancelar</button>
+                    <button class="btn-mini-save" (click)="saveComment(comment)">Guardar</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="comment-actions" *ngIf="editingCommentId !== comment.id">
+                <button class="comment-like-btn" (click)="likeComment(comment)" [class.liked]="comment.user_has_liked">
+                  <i class="fas fa-heart"></i>
+                  <span>{{ comment.likes_count }}</span>
+                </button>
+
+                <button class="comment-reply-btn" (click)="replyingTo = comment.id; replyContent = ''">
+                  <i class="fas fa-reply"></i>
+                  <span>Responder</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Respuestas al comentario -->
+          <div class="comment-replies" *ngIf="comment.replies && comment.replies.length > 0">
+            <div class="reply-item" *ngFor="let reply of comment.replies">
+              <div class="comment-avatar small">
+                <i class="fas fa-user"></i>
+              </div>
+
+              <div class="comment-content">
+                <div class="comment-header">
+                  <span class="comment-author">
+                    <i class="fas fa-user me-1"></i>
+                    Usuario {{ reply.author_fingerprint.substring(0, 8) }}
+                  </span>
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="comment-date">
+                      <i class="fas fa-clock me-1"></i>{{ formatTimeAgo(reply.created_at) }}
+                    </span>
+                    <!-- Admin Actions -->
+                    <div *ngIf="isAdmin && editingCommentId !== reply.id" class="admin-actions-mini">
+                      <button class="btn-mini-edit" (click)="startEditComment(reply)" title="Editar">
+                        <i class="fas fa-edit"></i>
+                      </button>
+                      <button class="btn-mini-delete" (click)="deleteComment(reply)" title="Eliminar">
+                        <i class="fas fa-trash-alt"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="comment-text">
+                  <p *ngIf="editingCommentId !== reply.id">{{ reply.content }}</p>
+                  <div *ngIf="editingCommentId === reply.id" class="edit-form-mini">
+                    <textarea [(ngModel)]="editedCommentContent" class="form-control mb-2" rows="2"></textarea>
+                    <div class="d-flex gap-2 justify-content-end">
+                      <button class="btn-mini-cancel" (click)="cancelEditComment()">Cancelar</button>
+                      <button class="btn-mini-save" (click)="saveComment(reply)">Guardar</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="comment-actions" *ngIf="editingCommentId !== reply.id">
+                  <button class="comment-like-btn" (click)="likeComment(reply)" [class.liked]="reply.user_has_liked">
+                    <i class="fas fa-heart"></i>
+                    <span>{{ reply.likes_count }}</span>
+                  </button>
+
+                  <button class="comment-reply-btn"
+                    (click)="replyingTo = comment.id; replyContent = '@' + (reply.author_fingerprint.substring(0, 8) || '') + ' '">
+                    <i class="fas fa-reply"></i>
+                    <span>Responder</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error state -->
+  <div class="error-state" *ngIf="error && !isLoading">
+    <div class="error-message">
+      <i class="fas fa-exclamation-triangle"></i>
+      <h3>Error al cargar el hilo</h3>
+      <p>{{ error }}</p>
+      <a [routerLink]="['/discussion']" class="btn-retry">
+        <i class="fas fa-arrow-left me-2"></i>Volver al foro
+      </a>
+    </div>
+  </div>
+</div>

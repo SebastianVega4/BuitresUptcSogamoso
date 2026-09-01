@@ -1,0 +1,63 @@
+<div class="main-container">
+  <header class="main-header">
+    <div class="container d-flex justify-content-between align-items-center">
+      <div class="logo-container">
+        <a routerLink="/" class="text-decoration-none text-white d-flex align-items-center">
+          <div class="logo-icon">
+            <i class="fas fa-crow"></i>
+          </div>
+          <h1 class="app-title mb-0 ms-2">{{ title }}</h1>
+        </a>
+      </div>
+
+      <button class="hamburger-menu d-md-none" (click)="toggleMenu()">
+        <i class="fas" [ngClass]="isMenuOpen ? 'fa-times' : 'fa-bars'"></i>
+      </button>
+
+      <nav class="main-nav" [class.active]="isMenuOpen">
+        <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="toggleMenu()">
+          <i class="fas fa-home me-1"></i>Inicio
+        </a>
+        <a routerLink="/buitres" routerLinkActive="active" (click)="toggleMenu()">
+          <i class="fas fa-user-friends me-1"></i>Buitres
+        </a>
+        <a routerLink="/discussion" routerLinkActive="active" (click)="toggleMenu()">
+          <i class="fas fa-comments me-1"></i>Foro
+        </a>
+        <a routerLink="/about" routerLinkActive="active" (click)="toggleMenu()">
+          <i class="fas fa-info-circle me-1"></i>About
+        </a>
+        <a routerLink="/admin-login" routerLinkActive="active" (click)="toggleMenu()">
+          <i class="fas fa-lock me-1"></i>
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="content-area">
+    <div class="container">
+      <router-outlet></router-outlet>
+    </div>
+  </main>
+
+  <app-floating-chat></app-floating-chat>
+  <app-modal></app-modal>
+</div>
+
+<footer class="now-playing-bar">
+  <div class="footer-content text-center">
+    <p class="footer-text mb-0">Desarrollado por:</p>
+    <p class="footer-text mb-1">Estudiante de Ingeniería de Sistemas - UPTC Sogamoso 2025-II</p>
+    <div class="social-links">
+      <a href="https://github.com/SebastianVega4" target="_blank">
+        <i class="fab fa-github me-1"></i>GitHub
+      </a>
+      <a href="https://www.linkedin.com/in/johan-sebastian-vega-ruiz-b1292011b/" target="_blank">
+        <i class="fab fa-linkedin me-1"></i>LinkedIn
+      </a>
+      <a href="https://www.instagram.com/sebastian.vegar/" target="_blank">
+        <i class="fab fa-instagram me-1"></i>Instagram
+      </a>
+    </div>
+  </div>
+</footer>

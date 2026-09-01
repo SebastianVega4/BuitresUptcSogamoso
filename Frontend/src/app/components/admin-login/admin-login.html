@@ -1,0 +1,64 @@
+<div class="admin-login-wrapper">
+  <div class="particles">
+    <div 
+      class="particle"
+      *ngFor="let p of particles"
+      [ngStyle]="{ 
+        'width': p.width, 
+        'height': p.height, 
+        'left': p.left, 
+        'top': p.top,
+        'animation-duration': p.animationDuration, 
+        'animation-delay': p.animationDelay 
+      }"
+    ></div>
+  </div>
+
+  <div class="login-container">
+    <div class="glassmorphism-form">
+      <h2 class="form-title">Acceso Administrador</h2>
+      
+      <form (ngSubmit)="login()" *ngIf="!authService.isLoggedIn()">
+        <div class="input-group">
+          <input 
+            type="email" 
+            class="form-input"
+            id="email" 
+            [(ngModel)]="email" 
+            name="email"
+            required
+            placeholder=" "
+          >
+          <label for="email" class="form-label">Email</label>
+        </div>
+        
+        <div class="input-group">
+          <input 
+            type="password" 
+            class="form-input"
+            id="password" 
+            [(ngModel)]="password" 
+            name="password"
+            required
+            placeholder=" "
+          >
+          <label for="password" class="form-label">Contraseña</label>
+        </div>
+        
+        <div *ngIf="errorMessage" class="error-message">
+          {{ errorMessage }}
+        </div>
+        
+        <button type="submit" class="login-button" [disabled]="isLoading">
+          <span class="button-text">{{ isLoading ? 'Verificando...' : 'Ingresar' }}</span>
+          <i class="fas fa-spinner fa-spin" *ngIf="isLoading"></i>
+        </button>
+      </form>
+
+      <div *ngIf="authService.isLoggedIn()" class="logged-in-message">
+        <p>Sesión iniciada. Redirigiendo al panel de administrador...</p>
+        <a routerLink="/admin-panel" class="admin-link">Ir al Panel</a>
+      </div>
+    </div>
+  </div>
+</div>

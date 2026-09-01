@@ -1,0 +1,267 @@
+<div class="buitres-container mt-4 animate-fade-in">
+    <div class="header-section text-center mb-5">
+        <h2 class="section-title">Encuentra y <span class="text-gradient">Buitrea </span> a quien quieras <span
+                class="text-gradient">en completo
+                anonimato</span></h2>
+        <p class="section-subtitle">Busca si esa persona ya está en nuestra base de datos comunitaria, si no creala.</p>
+        <p class="section-subtitle small mt-2">
+            si no sabes el nombre a quien quieres buitrear, siempre tendremos a nuestros amigos
+            <a href="https://www.instagram.com/buitresuptcsogamoso/" target="_blank"
+                class="text-gradient fw-bold">@BuitresUptcSogamoso</a>
+        </p>
+        <div class="stats-badge mt-2 d-flex align-items-center justify-content-center gap-3">
+            <span><i class="fas fa-users me-1"></i> {{ totalPeople }} perfiles registrados</span>
+            <button *ngIf="isLoggedIn" class="btn btn-link text-danger btn-sm p-0 text-decoration-none"
+                (click)="logout()">
+                <i class="fas fa-sign-out-alt me-1"></i> Cerrar Sesión
+            </button>
+        </div>
+    </div>
+
+    <!-- Login Section for Unauthenticated Users -->
+    <div *ngIf="!isLoggedIn" class="login-prompt card-dark p-5 text-center mb-5 animate-fade-in">
+        <div class="login-icon mb-4">
+            <i class="fab fa-google fa-3x text-gradient"></i>
+        </div>
+        <h3>Acceso Restringido</h3>
+        <p class="text-muted mb-4">Para ver esta seccion, debes iniciar sesión con tu cuenta institucional
+            de la UPTC. (Por politica de tratamiento de datos)</p>
+        <div class="disclaimer-alert alert alert-info mb-4 text-start">
+            <h5 class="alert-heading small fw-bold">Compromiso de Uso Responsable:</h5>
+            <p class="mb-0 x-small">Al iniciar sesión, te comprometes a utilizar esta información **exclusivamente para
+                fines personales y comunitarios**. Queda estrictamente prohibido el uso de estos datos para acoso,
+                discriminación, fines comerciales o cualquier actividad que vulnere la privacidad de los integrantes de
+                la universidad.</p>
+        </div>
+
+        <div class="data-acceptance-container mb-4 text-start p-3">
+            <div class="form-check d-flex align-items-center gap-3">
+                <input class="form-check-input flex-shrink-0" type="checkbox" id="dataTreatment"
+                    [(ngModel)]="dataAccepted" style="width: 20px; height: 20px; cursor: pointer;">
+                <label class="form-check-label small mb-0 cursor-pointer" for="dataTreatment">
+                    Acepto el tratamiento de mis datos personales según la <b>Ley 1581 de 2012 de Colombia</b> y la
+                    política de privacidad institucional.
+                </label>
+            </div>
+        </div>
+
+        <div class="google-btn-wrapper" [style.pointer-events]="dataAccepted ? 'auto' : 'none'"
+            [style.opacity]="dataAccepted ? '1' : '0.5'"
+            [title]="!dataAccepted ? 'Debes aceptar el tratamiento de datos para continuar' : ''">
+            <div id="google-btn-container" class="mb-3" style="min-height: 40px;"></div>
+        </div>
+        <p class="mt-3 small text-warning">
+            <i class="fas fa-shield-alt me-1"></i> Solo se permiten correos @uptc.edu.co
+        </p>
+    </div>
+
+    <ng-container *ngIf="isLoggedIn">
+
+        <!-- Navigation Tabs -->
+        <div class="nav-tabs-custom mb-4 d-flex justify-content-center gap-3">
+            <button class="tab-btn" [class.active]="activeTab === 'people'" (click)="activeTab = 'people'">
+                <i class="fas fa-users me-2"></i>Personas
+            </button>
+            <button class="tab-btn" [class.active]="activeTab === 'discussion'" (click)="activeTab = 'discussion'">
+                <i class="fas fa-comments me-2"></i>Foro
+            </button>
+        </div>
+
+        <!-- PEOPLE SECTION -->
+        <div *ngIf="activeTab === 'people'" class="animate-fade-in">
+            <div class="search-section mb-2">
+                <div class="search-box">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" [(ngModel)]="searchQuery" (ngModelChange)="onSearchChange($event)"
+                        (keyup.enter)="search()" placeholder="Digite Nombre o etiquetas ..." class="search-input"
+                        autocomplete="off">
+                    <button class="search-btn-icon" (click)="search()" title="Buscar">
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+
+                    <!-- Suggestions Dropdown -->
+                    <div class="search-suggestions" *ngIf="searchQuery.length >= 2 && suggestions.length >= 0">
+                        <div *ngFor="let suggestion of suggestions" class="suggestion-item"
+                            (click)="selectSuggestion(suggestion)">
+                            <div
+                                class="suggestion-avatar overflow-hidden d-flex align-items-center justify-content-center">
+                                <img *ngIf="suggestion.image_url" [src]="suggestion.image_url" alt="Profile"
+                                    class="w-100 h-100 object-fit-cover">
+                                <ng-container *ngIf="!suggestion.image_url">
+                                    <i *ngIf="suggestion.gender === 'male'" class="fas fa-user-tie male"></i>
+                                    <i *ngIf="suggestion.gender === 'female'" class="fas fa-user-graduate female"></i>
+                                </ng-container>
+                            </div>
+                            <div class="suggestion-info">
+                                <span class="suggestion-name d-block">{{ suggestion.name }}</span>
+                                <small class="suggestion-email text-muted" *ngIf="isAdmin && suggestion.email">{{
+                                    suggestion.email
+                                    }}</small>
+                            </div>
+                        </div>
+
+                        <!-- If no suggestions found, show create option -->
+                        <div *ngIf="suggestions.length === 0 && !loading" class="suggestion-item create-option"
+                            (click)="openCreateFormWithSearch()">
+                            <div class="suggestion-avatar">
+                                <i class="fas fa-plus text-success"></i>
+                            </div>
+                            <div>
+                                <span class="suggestion-name">"{{ searchQuery }}" no existe</span>
+                                <small class="d-block text-muted">Haz clic aquí para crear este perfil</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pequeño aviso difuminado -->
+            <div class="text-center mb-4 opacity-50">
+                <small class="text-white-50"><i class="fas fa-info-circle me-1"></i> Todo usuario en su perfil puede
+                    eliminar las notas, tags y comentarios.</small>
+            </div>
+
+            <div class="filters-section d-flex justify-content-center flex-wrap gap-2 mb-5" *ngIf="!isMerging">
+                <button class="filter-btn" [class.active]="currentSort === 'tags'" (click)="setSort('tags')">
+                    <i class="fas fa-tags me-1"></i> Más Etiquetas
+                </button>
+                <button class="filter-btn" [class.active]="currentSort === 'comments'" (click)="setSort('comments')">
+                    <i class="fas fa-comments me-1"></i> Más Comentados
+                </button>
+                <button class="filter-btn" [class.active]="currentSort === 'notes'" (click)="setSort('notes')">
+                    <i class="fas fa-music me-1"></i> Más Notas
+                </button>
+                <button class="filter-btn" [class.active]="currentSort === 'recent'" (click)="setSort('recent')">
+                    <i class="fas fa-clock me-1"></i> Recientes
+                </button>
+                <button class="filter-btn" [class.active]="currentSort === 'likes'" (click)="setSort('likes')">
+                    <i class="fas fa-heart me-1"></i> Más Votados
+                </button>
+            </div>
+
+            <div class="merge-banner card-dark mb-4 text-center animate-fade-in" *ngIf="isMerging && mergeSelected">
+                <div class="d-flex flex-column p-3 gap-3">
+                    <div class="d-flex align-items-center justify-content-center gap-3">
+                        <i class="fas fa-code-merge text-primary fa-2x"></i>
+                        <div>
+                            <h4 class="mb-0">Modo Fusión Activo</h4>
+                            <p class="mb-0 text-muted">Selecciona el perfil que quieres fusionar DENTRO DE <strong>{{
+                                    mergeSelected.name }}</strong></p>
+                        </div>
+                        <button class="btn btn-outline-light btn-sm ms-3" (click)="resetMerge()">Cancelar</button>
+                    </div>
+
+                    <div class="search-box mx-auto" style="max-width: 400px;">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" [(ngModel)]="mergeQuery" placeholder="Buscar duplicado..."
+                            class="search-input">
+                    </div>
+                </div>
+            </div>
+
+            <div *ngIf="loading" class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+            </div>
+
+            <div *ngIf="!loading && people.length > 0" class="people-grid">
+                <div *ngFor="let person of filteredPeople" class="person-card"
+                    [class.selecting-merge]="isMerging && mergeSelected?.id !== person.id"
+                    [class.animate-flash]="flashStates[person.id]"
+                    (click)="isMerging ? selectForMerge(person) : (router.navigate(['/buitres/person', person.id]))">
+                    <div class="person-img d-flex align-items-center justify-content-center overflow-hidden">
+                        <img *ngIf="person.image_url" [src]="person.image_url" alt="Profile"
+                            class="w-100 h-100 object-fit-cover">
+                        <ng-container *ngIf="!person.image_url">
+                            <i *ngIf="person.gender === 'male'" class="fas fa-user-tie gender-avatar male"></i>
+                            <i *ngIf="person.gender === 'female'" class="fas fa-user-graduate gender-avatar female"></i>
+                        </ng-container>
+                    </div>
+                    <div class="person-info">
+                        <h3>{{ person.name }}</h3>
+                        <div class="activity-date small text-muted mb-2" *ngIf="person.updated_at || person.created_at">
+                            <i class="fas fa-history me-1"></i>
+                            Actividad {{ formatTimeAgo(person.updated_at || person.created_at) }}
+                        </div>
+                        <div class="stats mt-2">
+                            <span><i class="fas fa-thumbs-up me-1"></i> {{ person.likes_count }}</span>
+                            <span class="ms-3"><i class="fas fa-thumbs-down me-1"></i> {{ person.dislikes_count
+                                }}</span>
+                        </div>
+
+                        <!-- Admin Actions -->
+                        <div class="admin-actions mt-3 d-flex gap-2" *ngIf="isAdmin && !isMerging"
+                            (click)="$event.stopPropagation()">
+                            <button class="btn btn-outline-primary btn-sm flex-grow-1" (click)="startMerge(person)">
+                                <i class="fas fa-code-merge me-1"></i> Fusionar
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm" (click)="deletePerson(person)">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div *ngIf="!loading && people.length === 0" class="empty-state text-center py-5">
+                <i class="fas fa-user-ghost fa-4x mb-3 text-muted"></i>
+                <h3>No encontramos a nadie con ese nombre</h3>
+                <p>¿Crees que debería estar aquí? ¡Puedes crearlo!</p>
+                <button class="btn btn-primary mt-3" (click)="showCreateForm = true">
+                    <i class="fas fa-plus me-2"></i>Crear Persona
+                </button>
+            </div>
+        </div>
+
+        <!-- DISCUSSION SECTION -->
+        <div *ngIf="activeTab === 'discussion'" class="animate-fade-in">
+            <app-discussion></app-discussion>
+        </div>
+
+
+        <!-- Modal de Creación -->
+        <div class="modal-overlay" *ngIf="showCreateForm" (click)="showCreateForm = false">
+            <div class="modal-content" (click)="$event.stopPropagation()">
+                <h3>Agregar Nuevo Buitre</h3>
+                <form (submit)="createPerson($event)">
+                    <div class="mb-3">
+                        <label class="form-label">Nombre Completo</label>
+                        <input type="text" [(ngModel)]="newName" name="newName" class="form-control"
+                            placeholder="Ej: Juan Perez" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Género</label>
+                        <div class="d-flex gap-3 mt-2">
+                            <div class="form-check custom-radio">
+                                <input class="form-check-input" type="radio" name="gender" id="genderMale" value="male"
+                                    [(ngModel)]="newGender">
+                                <label class="form-check-label" for="genderMale">
+                                    <i class="fas fa-mars me-1"></i> Masculino
+                                </label>
+                            </div>
+                            <div class="form-check custom-radio">
+                                <input class="form-check-input" type="radio" name="gender" id="genderFemale"
+                                    value="female" [(ngModel)]="newGender">
+                                <label class="form-check-label" for="genderFemale">
+                                    <i class="fas fa-venus me-1"></i> Femenino
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <p class="text-muted small"><i class="fas fa-info-circle me-1"></i> Una vez creada la persona,
+                            la
+                            comunidad podrá agregar etiquetas como "Sistemas", "Bonito", "Feo", etc.</p>
+                    </div>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-secondary"
+                            (click)="showCreateForm = false">Cancelar</button>
+                        <button type="submit" class="btn btn-primary" [disabled]="!newName || !newGender">Crear</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </ng-container>
+</div>

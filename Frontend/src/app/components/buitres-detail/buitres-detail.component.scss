@@ -1,0 +1,483 @@
+.card-dark {
+  background: #181818;
+  border: 1px solid #333;
+  border-radius: 15px;
+  padding: 25px;
+  color: white;
+}
+.profile-header {
+  position: relative;
+  z-index: 1;
+  overflow: visible;
+}
+
+.profile-img-container {
+  &.editable {
+    cursor: pointer;
+    
+    .profile-img:hover .edit-overlay {
+      opacity: 1;
+    }
+  }
+}
+
+.profile-img {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: #222;
+  border: 4px solid #333;
+  overflow: hidden;
+  position: relative;
+}
+
+.edit-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  opacity: 0;
+  transition: opacity 0.2s;
+  border-radius: 50%;
+  
+  i {
+    font-size: 1.5rem;
+    margin-bottom: 4px;
+  }
+  
+  span {
+    font-size: 0.8rem;
+    font-weight: bold;
+  }
+}
+
+.gender-avatar {
+  font-size: 4rem;
+}
+.gender-avatar.male { color: #519df5; }
+.gender-avatar.female { color: #f551a3; }
+.person-name { font-size: 2.5rem; font-weight: 800; color: #fff; }
+.person-desc { color: #b3b3b3; font-size: 1.1rem; }
+
+@keyframes flash-update {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); color: #1DB954; text-shadow: 0 0 10px rgba(29, 185, 84, 0.5); }
+  100% { transform: scale(1); }
+}
+
+@keyframes flash-bg {
+  0% { background-color: transparent; }
+  50% { background-color: rgba(29, 185, 84, 0.1); }
+  100% { background-color: transparent; }
+}
+
+.animate-flash {
+  display: inline-block;
+  animation: flash-update 0.8s ease-out;
+}
+
+.animate-flash-bg {
+  animation: flash-bg 1s ease-out;
+}
+
+.tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.tag-item {
+  display: flex;
+  align-items: center;
+  background: #282828;
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1px solid #404040;
+  transition: all 0.2s;
+}
+.tag-item.verified {
+  border-color: #1DB954;
+  background: rgba(29, 185, 84, 0.1);
+}
+.tag-content {
+  font-size: 0.9rem;
+  margin-right: 8px;
+}
+.tag-badge {
+  background: #404040;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+.tag-badge:hover { background: #505050; }
+.tag-badge i { color: #1DB954; }
+
+@keyframes heart-pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.4); color: #e91e63; }
+  100% { transform: scale(1); color: #e91e63; }
+}
+
+.liked-flash {
+  i {
+    animation: heart-pop 0.6s ease-out;
+    color: #e91e63 !important;
+  }
+  color: #e91e63 !important;
+}
+
+.comment-footer {
+  .cursor-pointer:hover {
+    color: #e91e63 !important;
+    i { color: #e91e63 !important; }
+  }
+}
+
+.comment-card {
+  background: #282828;
+  border-radius: 10px;
+  padding: 15px;
+  margin-bottom: 15px;
+}
+.comment-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
+.anon-id { color: #1DB954; font-weight: bold; font-size: 0.9rem; }
+.form-dark { background: #282828; border: 1px solid #404040; color: white; }
+.form-dark:focus { background: #333; color: white; border-color: #1DB954; box-shadow: none; }
+
+// Modal Styles
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  backdrop-filter: blur(5px);
+}
+
+.modal-content {
+  background: #181818;
+  border: 1px solid #333;
+  padding: 30px;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  animation: modal-in 0.3s ease-out;
+}
+
+@keyframes modal-in {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+// --- Song Notes Styles ---
+
+.song-notes-container {
+  position: relative;
+  z-index: 10; 
+  overflow: visible !important; 
+  padding: 0;
+  margin-top: 15px;
+  
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
+
+.notes-scroll {
+  display: flex;
+  gap: 25px;
+  padding: 45px 20px 20px 20px; // Reduced padding top
+  min-width: min-content;
+  overflow-x: auto; 
+  overflow-y: visible; 
+  
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
+
+.note-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  position: relative;
+  width: 80px;
+  flex-shrink: 0;
+  
+  // Dedication Cloud
+  .note-cloud {
+    position: absolute;
+    top: -38px; // Positioned for smaller padding
+    left: 50%;
+    transform: translateX(-50%);
+    background: white !important;
+    color: rgb(0, 0, 0) !important;
+    padding: 4px 10px;
+    border-radius: 14px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    white-space: nowrap; // Force single line
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+    z-index: 100;
+    width: 90px; // Fixed width to prevent overlap
+    overflow: hidden; // Hide overflow
+    text-overflow: ellipsis; // Add "..."
+    line-height: 1.3;
+    transition: all 0.2s;
+    
+    &:hover {
+      transform: translateX(-50%) scale(1.05);
+      background: #f0f0f0 !important;
+    }
+    
+    // Triangle pointing down
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -6px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 6px solid transparent;
+      border-right: 6px solid transparent;
+      border-top: 6px solid white;
+    }
+
+    .note-text {
+      display: inline;
+      color: black !important; // Force black color
+    }
+  }
+
+  &.add-note {
+    .note-circle {
+      border: 2px dashed #666;
+      background: #222;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      
+      i { font-size: 1.5rem; color: #888; }
+    }
+    &:hover .note-circle {
+      border-color: #1DB954;
+      i { color: #1DB954; }
+    }
+  }
+}
+
+.note-circle {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  padding: 3px; // Space for border
+  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+  position: relative;
+  transition: transform 0.2s;
+  
+  &.playing {
+    animation: pulse-border 1.5s infinite;
+  }
+  
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 3px solid #181818; // Inner border matching bg
+  }
+  
+  .note-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.4);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s;
+    
+    i { color: white; font-size: 1.2rem; }
+  }
+  
+  &:hover {
+    transform: scale(1.05);
+    .note-overlay { opacity: 1; }
+  }
+}
+
+.note-label {
+  font-size: 0.75rem;
+  color: #ccc;
+  text-align: center;
+  max-width: 100%;
+}
+
+@keyframes pulse-border {
+  0% { box-shadow: 0 0 0 0 rgba(220, 39, 67, 0.7); }
+  70% { box-shadow: 0 0 0 10px rgba(220, 39, 67, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(220, 39, 67, 0); }
+}
+
+// --- Song Search Modal ---
+.song-modal {
+  height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.search-box {
+  position: relative;
+  .search-icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #888;
+  }
+}
+
+.search-results {
+  flex-grow: 1;
+  overflow-y: auto;
+  border: 1px solid #333;
+  border-radius: 10px;
+  padding: 10px;
+  margin-bottom: 20px;
+}
+
+.song-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+  
+  &:hover {
+    background: #333;
+  }
+  
+  .song-thumb {
+    width: 50px;
+    height: 50px;
+    border-radius: 4px;
+    object-fit: cover;
+  }
+  
+  .song-info {
+    flex-grow: 1;
+    min-width: 0; // For text-truncate
+    
+    .song-name {
+      color: white;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .song-artist {
+      color: #aaa;
+      font-size: 0.85rem;
+    }
+  }
+}
+
+// --- New Styles for Text Notes & Deletion ---
+
+.note-item {
+  // Existing styles...
+  
+  // Hover effect to show delete button
+  &:hover .delete-note-btn {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+.text-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: #333; // Dark icon on light bg
+  
+  i { filter: drop-shadow(0 1px 2px rgba(0,0,0,0.1)); }
+}
+
+.delete-note-btn {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 20px;
+  height: 20px;
+  background: red;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+  z-index: 20;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  
+  &:hover {
+    transform: scale(1.1);
+  }
+}
+
+.modal-tabs {
+  button {
+    transition: all 0.2s;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+}
+
+// --- Dedication View Modal Styles ---
+.dedication-view-modal {
+  max-width: 400px;
+  
+  .dedication-full-text {
+    font-size: 1.1rem;
+    font-style: italic;
+    line-height: 1.5;
+    box-shadow: inset 0 2px 10px rgba(0,0,0,0.1);
+    word-wrap: break-word;
+  }
+}
+
+@keyframes pulse-heart {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+.animate-pulse {
+  animation: pulse-heart 2s infinite ease-in-out;
+}

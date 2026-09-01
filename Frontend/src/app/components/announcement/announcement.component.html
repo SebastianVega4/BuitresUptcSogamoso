@@ -1,0 +1,42 @@
+<div class="announcement-container card">
+  <div class="card-header d-flex justify-content-between align-items-center" (click)="toggleAnnouncement()">
+    <div>
+      <i class="fas fa-info-circle me-2"></i>Información Importante
+    </div>
+    <div class="btn-close" *ngIf="!isHidden">
+      <i class="fas fa-chevron-up"></i>
+    </div>
+    <div class="btn-close" *ngIf="isHidden">
+      <i class="fas fa-chevron-down"></i>
+    </div>
+  </div>
+  <div class="card-body" *ngIf="!isHidden">
+    <div class="announcement-content">
+      UptcMusic.com 2025 - V4.0
+      <div class="alert alert-info">
+        <h4><i class="fas fa-exclamation-triangle me-2"></i>A nuestros queridos usuarios:</h4>
+        <p>-Una cancion es eliminada automaticamente al completar <strong>10 Dislikes </strong></p>
+
+        <p>-Cancion que entre en reproduccion se eliminara automaticamente del Ranking</p>
+
+        <p>-Solo se puede votar una vez por cancion </p>
+
+        <p>-Toda Cancion Reproducida va para Ranking Historico</p>
+
+        <p>-Cancion con menos de 5 votos no se tiene en cuenta para ser reproducidas</p>
+
+        <p>-Cada semana se eliminaran todas las canciones del Ranking </p>
+
+        <p>No se puede usar Admin como nombre de usuario</p>
+
+        <p>Cualquier hilo que sea ofensivo, se eliminara </p>
+
+        <p>-El administrador tiene la potestad de evaluar cada sugerencia y decidir si es apropiada para el momento o
+          ambiente.</p>
+
+        <p><strong>Agradecemos enormemente su entusiasmo y participación. ¡Sigan votando por su música
+            favorita!</strong></p>
+      </div>
+    </div>
+  </div>
+</div>

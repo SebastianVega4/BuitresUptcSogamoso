@@ -1,0 +1,291 @@
+/* Variables específicas para el login */
+:host {
+  --login-bg: #0a0a0a;
+  --glass-bg: rgba(18, 18, 18, 0.85);
+  --primary-color: #1DB954;
+  --text-primary: #FFFFFF;
+  --text-secondary: #B3B3B3;
+  --hover-bg: rgba(255, 255, 255, 0.05);
+}
+
+/* Fondo futurista con efecto de partículas */
+.admin-login-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--login-bg);
+  position: relative;
+  overflow: hidden;
+  padding: 2rem;
+  
+  /* Efecto de partículas animadas */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: 
+      radial-gradient(circle at 10% 20%, rgba(29, 185, 84, 0.15) 0%, transparent 25%),
+      radial-gradient(circle at 90% 80%, rgba(141, 103, 171, 0.15) 0%, transparent 25%),
+      radial-gradient(circle at 50% 50%, rgba(29, 185, 84, 0.1) 0%, transparent 40%);
+    z-index: 0;
+    pointer-events: none;
+  }
+}
+
+/* Contenedor de partículas */
+.particles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.particle {
+  position: absolute;
+  background: rgba(29, 185, 84, 0.3);
+  border-radius: 50%;
+  animation: float 6s infinite ease-in-out;
+  
+  /* Variación de partículas */
+  &:nth-child(odd) {
+    background: rgba(141, 103, 171, 0.3);
+    animation-duration: 8s;
+    animation-delay: 1s;
+  }
+  
+  &:nth-child(3n) {
+    background: rgba(45, 70, 185, 0.2);
+    animation-duration: 10s;
+    animation-delay: 2s;
+  }
+}
+
+/* Animación para partículas */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) translateX(0);
+    opacity: 0.7;
+  }
+  25% {
+    transform: translateY(-20px) translateX(10px);
+    opacity: 0.4;
+  }
+  50% {
+    transform: translateY(-35px) translateX(-15px);
+    opacity: 0.6;
+  }
+  75% {
+    transform: translateY(-15px) translateX(-20px);
+    opacity: 0.5;
+  }
+}
+
+/* Contenedor del formulario */
+.login-container {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 450px;
+}
+
+/* Formulario con efecto de cristal (glassmorphism) */
+.glassmorphism-form {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 2.5rem;
+  box-shadow: 
+    0 15px 35px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+  transition: all 0.4s ease;
+  
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 
+      0 20px 45px rgba(29, 185, 84, 0.2),
+      0 0 0 1px rgba(29, 185, 84, 0.1);
+  }
+}
+
+/* Título del formulario */
+.form-title {
+  color: var(--text-primary);
+  text-align: center;
+  margin-bottom: 2rem;
+  font-weight: 800;
+  font-size: 1.8rem;
+  letter-spacing: -0.5px;
+  position: relative;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50px;
+    height: 3px;
+    background: var(--primary-color);
+    border-radius: 2px;
+  }
+}
+
+/* Grupos de entrada */
+.input-group {
+  position: relative;
+  margin-bottom: 1.8rem;
+}
+
+/* Campos de entrada */
+.form-input {
+  width: 100%;
+  background: rgba(42, 42, 42, 0.7);
+  border: 1px solid rgba(62, 62, 62, 0.5);
+  color: var(--text-primary);
+  border-radius: 12px;
+  padding: 1rem 1.2rem;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  
+  &:focus {
+    outline: none;
+    background: rgba(42, 42, 42, 0.9);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(29, 185, 84, 0.2);
+  }
+  
+  &:focus + .form-label,
+  &:not(:placeholder-shown) + .form-label {
+    top: -12px;
+    left: 10px;
+    font-size: 0.8rem;
+    background: var(--glass-bg);
+    padding: 0 8px;
+    color: var(--primary-color);
+  }
+}
+
+/* Etiquetas flotantes */
+.form-label {
+  position: absolute;
+  top: 1rem;
+  left: 1.2rem;
+  color: var(--text-secondary);
+  font-size: 1rem;
+  pointer-events: none;
+  transition: all 0.3s ease;
+}
+
+/* Mensaje de error */
+.error-message {
+  background: rgba(226, 33, 52, 0.15);
+  color: #e22134;
+  border: 1px solid rgba(226, 33, 52, 0.2);
+  border-radius: 8px;
+  padding: 0.8rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+/* Botón de login */
+.login-button {
+  width: 100%;
+  background: linear-gradient(135deg, var(--primary-color) 0%, #1aa34a 100%);
+  color: var(--text-primary);
+  border: none;
+  border-radius: 50px;
+  padding: 1rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 5px 15px rgba(29, 185, 84, 0.3);
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: all 0.5s ease;
+  }
+  
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(29, 185, 84, 0.4);
+    
+    &::before {
+      left: 100%;
+    }
+  }
+  
+  &:disabled {
+    opacity: 0.7;
+    transform: none;
+    box-shadow: none;
+    cursor: not-allowed;
+  }
+}
+
+/* Texto del botón */
+.button-text {
+  position: relative;
+  z-index: 1;
+}
+
+/* Mensaje de sesión iniciada */
+.logged-in-message {
+  text-align: center;
+  color: var(--text-primary);
+  
+  p {
+    margin-bottom: 1.5rem;
+    font-size: 1.1rem;
+  }
+}
+
+/* Enlace al panel de admin */
+.admin-link {
+  display: inline-block;
+  background: var(--primary-color);
+  color: var(--text-primary);
+  text-decoration: none;
+  padding: 0.8rem 1.8rem;
+  border-radius: 50px;
+  font-weight: 700;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(29, 185, 84, 0.3);
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(29, 185, 84, 0.4);
+  }
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+  .admin-login-wrapper {
+    padding: 1rem;
+  }
+  
+  .glassmorphism-form {
+    padding: 2rem 1.5rem;
+  }
+  
+  .form-title {
+    font-size: 1.5rem;
+  }
+}

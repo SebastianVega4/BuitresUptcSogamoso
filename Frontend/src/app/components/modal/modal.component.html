@@ -1,0 +1,26 @@
+<div class="modal-backdrop" *ngIf="config" [@fadeInOut] (click)="closeBackdrop($event)">
+  <div class="modal-container" [@scaleIn]>
+    <div class="modal-header" [ngClass]="config.type || 'info'">
+      <div class="icon-container">
+        <i class="fas fa-check-circle" *ngIf="config.type === 'success'"></i>
+        <i class="fas fa-exclamation-circle" *ngIf="config.type === 'warning' || config.type === 'danger'"></i>
+        <i class="fas fa-info-circle" *ngIf="config.type === 'info'"></i>
+        <i class="fas fa-question-circle" *ngIf="config.type === 'confirm'"></i>
+      </div>
+      <h3>{{ config.title }}</h3>
+    </div>
+    
+    <div class="modal-body">
+      <p>{{ config.message }}</p>
+    </div>
+    
+    <div class="modal-footer">
+      <button class="btn-cancel" *ngIf="config.showCancel" (click)="cancel()">
+        {{ config.cancelText || 'Cancelar' }}
+      </button>
+      <button class="btn-confirm" [ngClass]="config.type || 'info'" (click)="confirm()">
+        {{ config.confirmText || 'Aceptar' }}
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,153 @@
+.announcement-container {
+    margin-bottom: 2rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    overflow: hidden;
+    background: var(--glass-bg);
+    backdrop-filter: blur(15px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+    
+    &:hover {
+      box-shadow: 0 15px 40px rgba(29, 185, 84, 0.15);
+      border-color: rgba(29, 185, 84, 0.2);
+    }
+    
+    .card-header {
+      background: linear-gradient(135deg, rgba(29, 185, 84, 0.15) 0%, rgba(141, 103, 171, 0.15) 100%);
+      color: var(--text-primary);
+      font-weight: 700;
+      font-size: 1.1rem;
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      
+      i {
+        color: var(--primary-color);
+        margin-right: 0.5rem;
+      }
+
+      .btn-close {
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        cursor: pointer;
+        padding: 0.25rem;
+        border-radius: 50%;
+        transition: all 0.2s ease;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        
+        &:hover {
+          background: rgba(255, 255, 255, 0.1);
+          color: white;
+        }
+
+        i {
+          margin: 0;
+          font-size: 0.9rem;
+          color: inherit;
+        }
+      }
+    }
+    
+    .card-body {
+      padding: 1.5rem;
+    }
+    
+    .alert {
+      border: none;
+      border-radius: 12px;
+      padding: 1.5rem;
+      background: rgba(83, 143, 221, 0.1);
+      border-left: 4px solid rgba(83, 143, 221, 0.5);
+      
+      h4 {
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        
+        i {
+          color: #538fdd;
+          margin-right: 0.5rem;
+          font-size: 1.2rem;
+        }
+      }
+      
+      p {
+        font-size: 0.95rem;
+        line-height: 1.6;
+        color: var(--text-secondary);
+        margin-bottom: 1rem;
+        
+        &:last-child {
+          margin-bottom: 0;
+        }
+        
+        strong {
+          color: var(--text-primary);
+          font-weight: 600;
+        }
+      }
+    }
+    
+    .developer-info {
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      
+      .d-flex {
+        align-items: flex-start;
+      }
+      
+      p {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+      }
+      
+      h6 {
+        font-size: 0.95rem;
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+        font-weight: 600;
+      }
+      
+      .social-links {
+        display: flex;
+        gap: 1.2rem;
+        
+        a {
+          text-decoration: none;
+          transition: all 0.3s ease;
+          font-size: 0.9rem;
+          color: var(--text-secondary);
+          display: flex;
+          align-items: center;
+          
+          &:hover {
+            color: var(--primary-color);
+            transform: translateY(-2px);
+          }
+          
+          i {
+            margin-right: 0.4rem;
+            font-size: 1rem;
+          }
+        }
+      }
+    }
+  }
+  
+  /* Efecto de hover más pronunciado */
+  .announcement-container:hover {
+    border-color: var(--primary-color);
+  }

@@ -1,0 +1,97 @@
+<div class="floating-chat-container" *ngIf="currentUser$ | async as currentUser">
+  <!-- Botón flotante -->
+  <button class="floating-chat-button" (click)="toggleChat()" [class.has-unread]="unreadMessages > 0">
+    <i class="fas fa-comments"></i>
+    <span class="unread-badge" *ngIf="unreadMessages > 0">{{ unreadMessages }}</span>
+  </button>
+
+  <!-- Ventana de chat -->
+  <div class="chat-window" [class.open]="isChatOpen">
+    <!-- Header -->
+    <div class="chat-header" *ngIf="connected$ | async as isConnected">
+      <div class="header-left">
+        <h4><i class="fas fa-comments me-2"></i> Chat Musical</h4>
+        <div class="connection-status" [class.connected]="isConnected" [class.disconnected]="!isConnected">
+          <span class="status-dot"></span>
+          {{ isConnected ? 'Conectado' : 'Reconectando...' }}
+        </div>
+        <div *ngIf="!isConnected" class="reconnection-message">
+          <i class="fas fa-sync-alt fa-spin"></i> Reconectando...
+        </div>
+      </div>
+      <div class="header-right" *ngIf="onlineUsers$ | async as onlineUsers">
+        <div class="online-users"><i class="fas fa-users me-1"></i> {{ onlineUsers }}</div>
+        <button class="btn-user" (click)="showUserModal = true" title="Cambiar usuario"><i
+            class="fas fa-user-edit"></i></button>
+        <button class="btn-close" (click)="isChatOpen = false" title="Cerrar chat"><i class="fas fa-times"></i></button>
+      </div>
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="chat-stats" *ngIf="stats$ | async as stats">
+      <div class="stat-item"><small>Total: {{ stats?.total_messages }}</small></div>
+      <div class="stat-item"><small>Hoy: {{ stats?.messages_today }}</small></div>
+    </div>
+
+    <!-- Mensajes -->
+    <div class="messages-container" #messagesContainer>
+      <div *ngFor="let group of groupedMessages$ | async">
+        <!-- Separador de fecha -->
+        <div class="date-divider">
+          <span>{{ group.label }}</span>
+        </div>
+        
+        <!-- Mensajes del grupo -->
+        <div *ngFor="let message of group.messages; trackBy: trackByMessage" class="message"
+          [class.system-message]="message.type === 'system'"
+          [class.own-message]="message.user === currentUser && message.type === 'message'">
+          
+          <div class="message-header" *ngIf="message.type === 'message'">
+            <strong class="username">{{ message.user }}</strong>
+            <span class="message-time">{{ formatTime(message.timestamp) }}</span>
+            <button *ngIf="isAdmin$ | async" class="btn-delete-msg" (click)="deleteMessage(message.id)" title="Eliminar mensaje">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </div>
+          <div class="message-content">{{ message.message }}</div>
+        </div>
+      </div>
+      <!-- Indicador de escritura -->
+      <div *ngIf="(typingUsers$ | async) as typingUsers" class="typing-indicator">
+        <div *ngIf="typingUsers.length > 0">
+          <div class="typing-dots"><span></span><span></span><span></span></div>
+          <span class="typing-text">{{ typingUsers.join(', ') }} {{ typingUsers.length === 1 ? 'está escribiendo...' :
+            'están escribiendo...' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Input -->
+    <div class="input-container" *ngIf="connected$ | async as isConnected">
+      <input #messageInput type="text" [(ngModel)]="newMessage" (input)="onInputChange()" (keyup.enter)="sendMessage()"
+        [disabled]="!isConnected" placeholder="{{ isConnected ? 'Escribe un mensaje...' : 'Conectando...' }}"
+        class="message-input" />
+      <button (click)="sendMessage()" [disabled]="!newMessage.trim() || !isConnected" class="send-button"><i
+          class="fas fa-paper-plane"></i></button>
+    </div>
+
+    <!-- Modal para cambiar usuario -->
+    <div *ngIf="showUserModal" class="modal-overlay" (click)="showUserModal = false">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <h4>Cambiar Nombre</h4>
+        <input type="text" [value]="currentUser" #userInput (keyup)="onUsernameInput(userInput.value)"
+          (keyup.enter)="updateUser(userInput.value)" placeholder="Tu nombre de usuario" class="user-input"
+          maxlength="20" />
+        <div class="validation-message" *ngIf="usernameError">
+          <small class="text-danger">{{ usernameError }}</small>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-cancel" (click)="showUserModal = false">Cancelar</button>
+          <button class="btn-save" (click)="updateUser(userInput.value)" [disabled]="usernameError">
+            Guardar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

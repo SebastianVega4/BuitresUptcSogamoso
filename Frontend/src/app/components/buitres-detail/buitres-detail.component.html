@@ -1,0 +1,362 @@
+<div class="detail-container mt-4 animate-fade-in" *ngIf="person">
+    <!-- Header / Profile Section -->
+    <div class="profile-header card-dark mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-3">
+                <div class="profile-img-container" [class.editable]="isOwner || isAdmin"
+                    (click)="(isOwner || isAdmin) ? editImage() : null">
+                    <div
+                        class="profile-img d-flex align-items-center justify-content-center overflow-hidden position-relative">
+                        <img *ngIf="person.image_url" [src]="person.image_url" alt="Profile"
+                            class="w-100 h-100 object-fit-cover">
+                        <ng-container *ngIf="!person.image_url">
+                            <i *ngIf="person.gender === 'male'" class="fas fa-user-tie gender-avatar male"></i>
+                            <i *ngIf="person.gender === 'female'" class="fas fa-user-graduate gender-avatar female"></i>
+                        </ng-container>
+
+                        <div class="edit-overlay" *ngIf="isOwner || isAdmin">
+                            <i class="fas fa-camera"></i>
+                            <span>Cambiar</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-9">
+                <div class="d-flex align-items-center justify-content-center gap-3">
+                    <div class="person-title-section">
+                        <h1 class="person-name mb-0">{{ person.name }}</h1>
+                    </div>
+                    <div class="d-flex gap-2" *ngIf="isAdmin || isOwner">
+                        <button class="btn btn-outline-primary btn-sm" (click)="startEditing()">
+                            <i class="fas fa-edit me-1"></i> Editar
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm" *ngIf="isAdmin" (click)="deletePerson()">
+                            <i class="fas fa-trash-alt me-1"></i> Eliminar Perfil
+                        </button>
+                    </div>
+                </div>
+                <div class="vote-actions mt-3 d-flex align-items-center gap-2">
+                    <button class="btn btn-outline-success" (click)="vote('like')" [disabled]="voting"
+                        [class.animate-flash]="flashLikes">
+                        <i class="fas fa-thumbs-up me-2"></i>{{ person.likes_count }}
+                    </button>
+                    <button class="btn btn-outline-danger" (click)="vote('dislike')" [disabled]="voting"
+                        [class.animate-flash]="flashDislikes">
+                        <i class="fas fa-thumbs-down me-2"></i>{{ person.dislikes_count }}
+                    </button>
+
+                    <button class="btn btn-link text-muted btn-sm ms-auto text-decoration-none"
+                        (click)="requestRemoval()">
+                        <i class="fas fa-user-slash me-1"></i> Quiero eliminar mi perfil
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Song Notes Section (Instagram Style) -->
+    <div class="song-notes-container mb-4" *ngIf="songNotes">
+
+        <div *ngIf="isOwner" class="alert alert-warning mb-3 py-2">
+            <i class="fas fa-exclamation-circle me-2"></i> No puedes dejarte notas a ti mismo.
+        </div>
+
+        <div class="notes-scroll">
+            <!-- Add Note Button -->
+            <div class="note-item add-note" [class.opacity-50]="isOwner"
+                [style.cursor]="isOwner ? 'not-allowed' : 'pointer'" (click)="openSongModal()">
+                <div class="note-circle">
+                    <i class="fas fa-plus"></i>
+                </div>
+                <span class="note-label">Tu nota</span>
+            </div>
+
+            <!-- Notes List -->
+            <div *ngFor="let note of songNotes" class="note-item"
+                (click)="note.track_data.type === 'text' ? null : playPreview(note.track_data.preview_url, $event)">
+
+                <!-- Song Note -->
+                <div *ngIf="!note.track_data.type || note.track_data.type === 'song'" class="note-circle"
+                    [class.playing]="audioService.isCurrentSong(note.track_data.preview_url) && (audioService.isPlaying$ | async)">
+                    <img [src]="note.track_data.image" [alt]="note.track_data.name">
+                    <div class="note-overlay">
+                        <i class="fas"
+                            [class.fa-pause]="audioService.isCurrentSong(note.track_data.preview_url) && (audioService.isPlaying$ | async)"
+                            [class.fa-music]="!(audioService.isCurrentSong(note.track_data.preview_url) && (audioService.isPlaying$ | async))"></i>
+                    </div>
+                </div>
+
+                <!-- Text Note -->
+                <div *ngIf="note.track_data.type === 'text'" class="note-circle text-note"
+                    [style.background]="note.track_data.bg_color || '#333'">
+                    <i class="fas fa-sticky-note"></i>
+                </div>
+
+                <!-- Delete Button (Admin/Owner) -->
+                <div class="delete-note-btn" *ngIf="isAdmin || isOwner"
+                    (click)="$event.stopPropagation(); deleteNote(note.id)">
+                    <i class="fas fa-times"></i>
+                </div>
+
+                <!-- Dedication/Text Cloud -->
+                <div class="note-cloud" *ngIf="note.dedication" (click)="openDedicationModal(note.dedication, $event)">
+                    <span class="note-text">{{ note.dedication }}</span>
+                </div>
+
+                <span class="note-label text-truncate" style="max-width: 80px;">
+                    {{ note.track_data.type === 'text' ? 'Nota' : note.track_data.name }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Details Section (Crowdsourced Tags) -->
+        <div class="col-md-4">
+            <div class="card-dark h-100">
+                <h3 class="mb-3"><i class="fas fa-tags me-2 text-primary"></i>Etiquetas</h3>
+                <div class="tags-container d-flex flex-wrap gap-2 mb-4" [class.animate-flash-bg]="flashTags">
+                    <div *ngFor="let detail of details" class="tag-item" [class.verified]="detail.is_verified">
+                        <span class="tag-content" (click)="incrementDetail(detail.content)">{{ detail.content }}</span>
+                        <div class="tag-badge">
+                            {{ detail.occurrence_count }}
+                            <i *ngIf="detail.is_verified" class="fas fa-check-circle ms-1"></i>
+                            <!-- Admin/Owner Delete Tag -->
+                            <i *ngIf="isAdmin || isOwner" class="fas fa-times ms-2 text-danger cursor-pointer"
+                                (click)="$event.stopPropagation(); deleteDetail(detail.id)"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="add-tag mt-auto">
+                    <div class="input-group">
+                        <input type="text" [(ngModel)]="newDetailContent" class="form-control form-dark"
+                            placeholder="Agregar etiqueta..." (keyup.enter)="addDetail()">
+                        <button class="btn btn-primary" (click)="addDetail()" [disabled]="!newDetailContent">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                    <small class="text-muted mt-2 d-block">Haz click en los tags para incrementar el numero</small>
+                </div>
+
+                <div class="deletion-stats mt-3 pt-3 border-top border-secondary text-center"
+                    *ngIf="(person.deletions_count ?? 0) > 0">
+                    <small>
+                        <i class="fas fa-trash-alt me-1"></i>
+                        Este usuario ha eliminado {{ person.deletions_count }} {{ person.deletions_count === 1 ?
+                        'elemento' : 'elementos' }}
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Comments Section -->
+        <div class="col-md-8">
+            <div class="card-dark">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="mb-0"><i class="fas fa-comments me-2 text-primary"></i>Foro Anónimo</h3>
+                </div>
+
+                <div class="comment-input-area mb-4">
+                    <textarea [(ngModel)]="newComment" class="form-control form-dark" rows="3"
+                        placeholder="Escribe algo anónimamente, una vez enviado no se podra editar.Solo el dueño del perfil lo puede eliminar"
+                        [disabled]="isOwner"></textarea>
+
+                    <div *ngIf="isOwner" class="alert alert-warning mt-2 mb-0 py-2">
+                        <i class="fas fa-exclamation-circle me-2"></i> No puedes comentarte a ti mismo.
+                    </div>
+
+                    <button class="btn btn-primary mt-2" (click)="submitComment()" [disabled]="!newComment || isOwner">
+                        Publicar Comentario
+                    </button>
+                </div>
+                <div class="d-flex align-items-center">
+                    <label class="text-muted me-2 small">Ordenar por:</label>
+                    <select class="form-select form-select-sm form-dark w-auto" [(ngModel)]="sortOption"
+                        (change)="sortComments()">
+                        <option value="newest">Más Recientes</option>
+                        <option value="oldest">Más Antiguos</option>
+                        <option value="likes">Más Populares</option>
+                    </select>
+                </div>
+                <div class="comments-list" [class.animate-flash-bg]="flashComments">
+                    <div *ngFor="let comment of comments" class="comment-card">
+                        <div class="comment-header d-flex justify-content-between">
+                            <div>
+                                <span class="anon-id">Anónimo #{{ comment.author_fingerprint | slice:0:5 }}</span>
+                                <small class="text-muted ms-2">{{ comment.created_at | date:'short' }}</small>
+                            </div>
+                            <!-- Admin/Owner Delete Comment -->
+                            <button *ngIf="isAdmin || isOwner" class="btn btn-link text-danger btn-sm p-0"
+                                (click)="deleteComment(comment.id)">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                        <p class="comment-body">{{ comment.content }}</p>
+                        <div class="comment-footer">
+                            <span class="text-muted cursor-pointer d-inline-flex align-items-center"
+                                [class.liked-flash]="flashCommentLikes[comment.id]" (click)="likeComment(comment.id)"
+                                title="Dar like">
+                                <i class="fas fa-heart me-1"></i> {{ comment.likes_count }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Song/Note Modal -->
+<div class="modal-overlay" *ngIf="showSongModal" (click)="closeSongModal()">
+    <div class="modal-content song-modal" (click)="$event.stopPropagation()">
+        <h3 class="text-white mb-3">Dejar una Nota</h3>
+        <div class="alert alert-info py-2 small">
+            <i class="fas fa-info-circle me-1"></i> Esta nota será visible por 7 días.
+        </div>
+
+        <!-- Tabs -->
+        <div class="modal-tabs d-flex gap-2 mb-3">
+            <button class="btn btn-sm flex-grow-1" [class.btn-primary]="activeNoteTab === 'song'"
+                [class.btn-outline-secondary]="activeNoteTab !== 'song'" (click)="switchNoteTab('song')">
+                <i class="fas fa-music me-1"></i> Canción
+            </button>
+            <button class="btn btn-sm flex-grow-1" [class.btn-primary]="activeNoteTab === 'text'"
+                [class.btn-outline-secondary]="activeNoteTab !== 'text'" (click)="switchNoteTab('text')">
+                <i class="fas fa-comment-alt me-1"></i> Texto
+            </button>
+        </div>
+
+        <!-- SONG TAB CONTENT -->
+        <ng-container *ngIf="activeNoteTab === 'song'">
+            <div class="search-box mb-3">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" [(ngModel)]="songSearchQuery" (input)="onSongSearchInput(songSearchQuery)"
+                    class="form-control form-dark ps-5" placeholder="Buscar en Spotify...">
+            </div>
+
+            <div class="search-results custom-scroll" *ngIf="!selectedSong">
+                <div *ngIf="isSearchingSongs" class="text-center py-3">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Buscando...</span>
+                    </div>
+                </div>
+
+                <div *ngFor="let song of songSearchResults" class="song-item" (click)="selectSong(song)">
+                    <img [src]="song.image" alt="Album" class="song-thumb">
+                    <div class="song-info">
+                        <div class="song-name">{{ song.name }}</div>
+                        <div class="song-artist">{{ song.artists.join(', ') }}</div>
+                    </div>
+
+                    <button class="btn btn-sm btn-outline-info rounded-circle me-2"
+                        style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;"
+                        (click)="playPreview(song.preview_url, $event)" [disabled]="!song.preview_url">
+                        <i class="fas"
+                            [class.fa-play]="!audioService.isCurrentSong(song.preview_url) || !(audioService.isPlaying$ | async)"
+                            [class.fa-pause]="audioService.isCurrentSong(song.preview_url) && (audioService.isPlaying$ | async)"></i>
+                    </button>
+
+                    <button class="btn btn-sm btn-outline-primary"><i class="fas fa-check"></i></button>
+                </div>
+
+                <div *ngIf="!isSearchingSongs && songSearchResults.length === 0 && songSearchQuery"
+                    class="text-center py-3 text-muted">
+                    No se encontraron canciones
+                </div>
+            </div>
+
+            <div class="selected-song-form" *ngIf="selectedSong">
+                <div
+                    class="selected-song-preview mb-3 p-2 border rounded border-secondary d-flex align-items-center gap-3">
+                    <img [src]="selectedSong.image" alt="Album" width="50" height="50" class="rounded">
+                    <div>
+                        <div class="fw-bold">{{ selectedSong.name }}</div>
+                        <small class="text-muted">{{ selectedSong.artists.join(', ') }}</small>
+                    </div>
+                    <button class="btn btn-sm btn-outline-danger ms-auto" (click)="selectedSong = null">Cambiar</button>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label text-white">Dedicatoria (Opcional)</label>
+                    <textarea [(ngModel)]="newSongDedication" class="form-control form-dark" rows="2" maxlength="30"
+                        placeholder="Escribe un mensaje corto..."></textarea>
+                    <small class="text-muted text-end d-block">{{ newSongDedication.length }}/30</small>
+                </div>
+            </div>
+        </ng-container>
+
+        <!-- TEXT TAB CONTENT -->
+        <ng-container *ngIf="activeNoteTab === 'text'">
+            <div class="mb-3">
+                <label class="form-label text-white">Tu Nota</label>
+                <textarea [(ngModel)]="newTextNoteContent" class="form-control form-dark" rows="3" maxlength="30"
+                    placeholder="Escribe algo corto..."></textarea>
+                <small class="text-muted text-end d-block">{{ newTextNoteContent.length }}/30</small>
+            </div>
+        </ng-container>
+
+        <div class="d-flex justify-content-end gap-2 mt-auto">
+            <button class="btn btn-secondary" (click)="closeSongModal()">Cancelar</button>
+            <button class="btn btn-primary" (click)="postNote()"
+                [disabled]="(activeNoteTab === 'song' && !selectedSong) || (activeNoteTab === 'text' && !newTextNoteContent)">
+                Publicar
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Admin/Owner Edit Modal -->
+<div class="modal-overlay" *ngIf="isEditing && (isAdmin || isOwner)" (click)="isEditing = false">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+        <h3 class="text-white">Editar Perfil</h3>
+        <div class="mb-3" *ngIf="isAdmin">
+            <label class="form-label text-white">Nombre</label>
+            <input type="text" [(ngModel)]="editName" class="form-control form-dark">
+        </div>
+        <div class="mb-3" *ngIf="isAdmin">
+            <label class="form-label text-white">Correo Electrónico</label>
+            <input type="email" [(ngModel)]="editEmail" class="form-control form-dark">
+        </div>
+        <div class="mb-3">
+            <label class="form-label text-white">URL de Imagen (Opcional)</label>
+            <input type="text" [(ngModel)]="editImageUrl" class="form-control form-dark"
+                placeholder="https://ejemplo.com/foto.jpg">
+
+            <div class="mt-2">
+                <label class="form-label text-white small">O subir imagen:</label>
+                <input type="file" (change)="onFileSelected($event)" accept="image/*" class="form-control form-dark">
+                <div *ngIf="selectedFile" class="text-success mt-1 small">
+                    Imagen seleccionada: {{ selectedFile.name }}
+                </div>
+            </div>
+
+            <small class="text-muted">Deja vacío para usar el avatar por defecto.</small>
+        </div>
+        <div class="mb-3">
+            <label class="form-label text-white">Género</label>
+            <select [(ngModel)]="editGender" class="form-select form-dark">
+                <option value="male">Masculino</option>
+                <option value="female">Femenino</option>
+            </select>
+        </div>
+        <div class="d-flex justify-content-end gap-2 mt-4">
+            <button class="btn btn-secondary" (click)="isEditing = false">Cancelar</button>
+            <button class="btn btn-primary" (click)="saveEdits()">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Full Dedication View Modal -->
+<div class="modal-overlay" *ngIf="showFullDedicationModal" (click)="showFullDedicationModal = false">
+    <div class="modal-content dedication-view-modal text-center" (click)="$event.stopPropagation()">
+        <div class="mb-4">
+            <i class="fas fa-heart text-danger fa-3x mb-3 animate-pulse"></i>
+            <h3 class="text-white">Dedicatoria</h3>
+        </div>
+        <div class="dedication-full-text p-4 rounded bg-white text-dark mb-4">
+            "{{ selectedDedicationText }}"
+        </div>
+        <button class="btn btn-primary w-100" (click)="showFullDedicationModal = false">Cerrar</button>
+    </div>
+</div>

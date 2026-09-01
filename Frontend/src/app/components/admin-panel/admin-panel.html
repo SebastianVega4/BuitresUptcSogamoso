@@ -1,0 +1,96 @@
+<div class="admin-panel-container">
+  <div class="message-container">
+    <div class="success-message" *ngIf="successMessage">
+      <i class="fas fa-check-circle"></i> {{ successMessage }}
+    </div>
+    <div class="error-message" *ngIf="errorMessage">
+      <i class="fas fa-exclamation-circle"></i> {{ errorMessage }}
+    </div>
+  </div>
+
+  <div class="admin-header">
+    <div class="header-content">
+      <h1>
+        <i class="fas fa-crow me-2"></i>Panel de Administración
+      </h1>
+      <p class="header-subtitle">Gestiona los buitres de la comunidad</p>
+    </div>
+    <button class="btn-logout" (click)="logout()">
+      <i class="fas fa-sign-out-alt me-1"></i>Cerrar Sesión
+    </button>
+  </div>
+
+  <div class="admin-content">
+    <div class="admin-sidebar">
+      <div class="sidebar-section">
+        <h3>Navegación</h3>
+        <button class="sidebar-btn" [class.active]="activeSection === 'dashboard'"
+          (click)="setActiveSection('dashboard')">
+          <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+        </button>
+        <button class="sidebar-btn" [class.active]="activeSection === 'buitres'"
+          (click)="setActiveSection('buitres')">
+          <i class="fas fa-users me-2"></i>Buitres
+        </button>
+      </div>
+      <div class="sidebar-section">
+        <h3>Acciones Rápidas</h3>
+        <button class="sidebar-btn" (click)="loadAllBuitres()">
+          <i class="fas fa-sync-alt me-2"></i>Actualizar
+        </button>
+      </div>
+    </div>
+
+    <div class="admin-main">
+      <div class="section" *ngIf="activeSection === 'dashboard'">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-content">
+              <h3>{{ totalBuitres }}</h3>
+              <p>Total de Buitres</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section" *ngIf="activeSection === 'buitres'">
+        <div class="section-header">
+          <h2>Lista de Buitres</h2>
+          <button class="btn-refresh" (click)="loadAllBuitres()" [disabled]="isLoading">
+            <i class="fas fa-sync-alt" [class.fa-spin]="isLoading"></i>
+          </button>
+        </div>
+
+        <div class="buitres-list" *ngIf="buitres.length > 0; else emptyList">
+          <div class="buitre-item" *ngFor="let buitre of buitres">
+            <div class="buitre-info">
+              <h4>{{ buitre.name }}</h4>
+              <p>{{ buitre.description || 'Sin descripción' }}</p>
+              <span class="gender-badge" [class]="buitre.gender">
+                {{ buitre.gender === 'male' ? 'Masculino' : 'Femenino' }}
+              </span>
+            </div>
+            <div class="buitre-actions">
+              <a [routerLink]="['/buitres/person', buitre.id]" class="btn-action btn-view">
+                <i class="fas fa-eye"></i>
+              </a>
+              <button class="btn-action btn-delete" (click)="deleteBuitre(buitre.id, buitre.name)">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <ng-template #emptyList>
+          <div class="empty-state">
+            <i class="fas fa-users"></i>
+            <p>No hay buitres registrados</p>
+          </div>
+        </ng-template>
+      </div>
+    </div>
+  </div>
+</div>

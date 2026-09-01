@@ -1,0 +1,18 @@
+{
+  "name": "music-uptc-backend",
+  "version": "1.0.0",
+  "description": "Backend para sistema de votación musical UPTC",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "vercel dev",
+    "vercel-build": "npm install"
+  },
+  "dependencies": {
+    "firebase-admin": "^11.5.0",
+    "spotify-web-api-node": "^5.0.2"
+  },
+  "devDependencies": {
+    "@vercel/node": "^2.9.7"
+  }
+}
