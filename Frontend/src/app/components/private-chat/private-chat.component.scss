@@ -1,9 +1,9 @@
 .chat-fab {
   position: fixed;
-  bottom: 100px;
+  bottom: 30px;
   right: 24px;
-  width: 56px;
-  height: 56px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   background: var(--primary-color);
   color: #fff;
@@ -20,16 +20,16 @@
   }
 
   i {
-    font-size: 22px;
+    font-size: 20px;
   }
 }
 
 .chat-panel {
   position: fixed;
-  bottom: 170px;
-  right: 24px;
-  width: 360px;
-  height: 500px;
+  bottom: 30px;
+  right: 82px;
+  width: 320px;
+  height: 400px;
   background: var(--card-bg);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 16px;

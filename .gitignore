@@ -1,5 +1,6 @@
 # Angular specific
-/dist/
+dist/
+/dist
 /out-tsc/
 /tmp/
 /coverage/

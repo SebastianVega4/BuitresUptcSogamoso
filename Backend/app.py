@@ -1470,6 +1470,7 @@ def send_message():
         msg_result = supabase.table('private_messages').insert({
             'conversation_id': conv_id,
             'sender_email': sender_email,
+            'recipient_email': recipient_id,
             'content': content
         }).execute()
         supabase.table('private_conversations').update({
