@@ -48,7 +48,7 @@
 }
 
 .text-gradient {
-  background: linear-gradient(45deg, #1DB954, #19e68c);
+  background: linear-gradient(45deg, #E22134, #ff3050);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -83,7 +83,7 @@
   right: 10px;
   top: 50%;
   transform: translateY(-50%);
-  background: #1DB954;
+  background: #E22134;
   color: white;
   border: none;
   width: 35px;
@@ -97,7 +97,7 @@
   z-index: 2;
 
   &:hover {
-    background: #1ed760;
+    background: #ff3050;
     transform: translateY(-50%) scale(1.1);
   }
 
@@ -109,13 +109,13 @@
 
 .stats-badge {
   display: inline-block;
-  background: rgba(29, 185, 84, 0.1);
-  color: #1DB954;
+  background: rgba(226, 33, 52, 0.1);
+  color: #E22134;
   padding: 5px 15px;
   border-radius: 20px;
   font-size: 0.9rem;
   font-weight: 500;
-  border: 1px solid rgba(29, 185, 84, 0.3);
+  border: 1px solid rgba(226, 33, 52, 0.3);
 }
 
 .nav-tabs-custom {
@@ -139,10 +139,10 @@
         }
 
         &.active {
-            background: #1DB954;
+            background: #E22134;
             color: white;
-            border-color: #1DB954;
-            box-shadow: 0 4px 15px rgba(29, 185, 84, 0.3);
+            border-color: #E22134;
+            box-shadow: 0 4px 15px rgba(226, 33, 52, 0.3);
         }
     }
 }
@@ -168,16 +168,16 @@
 }
 
 .filter-btn.active {
-  background: #1DB954;
+  background: #E22134;
   color: #fff;
-  border-color: #1DB954;
+  border-color: #E22134;
   font-weight: bold;
 }
 
 .search-input:focus {
   outline: none;
-  border-color: #1DB954;
-  box-shadow: 0 0 10px rgba(29, 185, 84, 0.2);
+  border-color: #E22134;
+  box-shadow: 0 0 10px rgba(226, 33, 52, 0.2);
 }
 
 .search-suggestions {
@@ -214,7 +214,7 @@
 
 @keyframes flash-update {
   0% { transform: scale(1); }
-  50% { transform: scale(1.03); border-color: #1DB954; box-shadow: 0 0 15px rgba(29, 185, 84, 0.3); }
+  50% { transform: scale(1.03); border-color: #E22134; box-shadow: 0 0 15px rgba(226, 33, 52, 0.3); }
   100% { transform: scale(1); }
 }
 
@@ -227,11 +227,11 @@
 }
 
 .create-option {
-  background: rgba(29, 185, 84, 0.05);
+  background: rgba(226, 33, 52, 0.05);
 }
 
 .create-option:hover {
-  background: rgba(29, 185, 84, 0.15);
+  background: rgba(226, 33, 52, 0.15);
 }
 
 .suggestion-avatar {
@@ -318,25 +318,25 @@
   background: #444;
 }
 .custom-radio input:checked + label {
-  color: #1DB954;
+  color: #E22134;
   font-weight: bold;
 }
 
 .selecting-merge {
-  border-color: #1DB954 !important;
-  box-shadow: 0 0 15px rgba(29, 185, 84, 0.3);
+  border-color: #E22134 !important;
+  box-shadow: 0 0 15px rgba(226, 33, 52, 0.3);
   animation: pulse-border 2s infinite;
 }
 
 @keyframes pulse-border {
-  0% { box-shadow: 0 0 0 0 rgba(29, 185, 84, 0.4); }
-  70% { box-shadow: 0 0 0 10px rgba(29, 185, 84, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(29, 185, 84, 0); }
+  0% { box-shadow: 0 0 0 0 rgba(226, 33, 52, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(226, 33, 52, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(226, 33, 52, 0); }
 }
 
 .merge-banner {
-  background: rgba(29, 185, 84, 0.1);
-  border: 1px solid #1DB954;
+  background: rgba(226, 33, 52, 0.1);
+  border: 1px solid #E22134;
   border-radius: 12px;
 }
 
@@ -356,14 +356,14 @@
         border: 2px solid rgba(255, 255, 255, 0.2);
         
         &:checked {
-            background-color: #1DB954;
-            border-color: #1DB954;
-            box-shadow: 0 0 10px rgba(29, 185, 84, 0.4);
+            background-color: #E22134;
+            border-color: #E22134;
+            box-shadow: 0 0 10px rgba(226, 33, 52, 0.4);
         }
 
         &:focus {
-            box-shadow: 0 0 0 0.25rem rgba(29, 185, 84, 0.25);
-            border-color: #1DB954;
+            box-shadow: 0 0 0 0.25rem rgba(226, 33, 52, 0.25);
+            border-color: #E22134;
         }
     }
 

@@ -23,9 +23,9 @@
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   
       &:hover {
-        background: rgba(29, 185, 84, 0.1);
+        background: rgba(226, 33, 52, 0.1);
         transform: translateX(-5px);
-        box-shadow: 0 6px 20px rgba(29, 185, 84, 0.2);
+        box-shadow: 0 6px 20px rgba(226, 33, 52, 0.2);
       }
   
       i {
@@ -81,8 +81,8 @@
       transition: all 0.3s ease;
   
       &:hover {
-        box-shadow: 0 12px 40px rgba(29, 185, 84, 0.15);
-        border-color: rgba(29, 185, 84, 0.2);
+        box-shadow: 0 12px 40px rgba(226, 33, 52, 0.15);
+        border-color: rgba(226, 33, 52, 0.2);
       }
   
       .thread-header {
@@ -170,7 +170,7 @@
   
         .like-btn {
           border: none;
-          background: rgba(29, 185, 84, 0.1);
+          background: rgba(226, 33, 52, 0.1);
           color: var(--text-secondary);
   
           &.liked {
@@ -183,7 +183,7 @@
           }
   
           &:hover {
-            background: rgba(29, 185, 84, 0.2);
+            background: rgba(226, 33, 52, 0.2);
             
             &.liked {
               background: rgba(231, 76, 60, 0.2);
@@ -247,7 +247,7 @@
           &:focus {
             outline: none;
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 2px rgba(29, 185, 84, 0.2);
+            box-shadow: 0 0 0 2px rgba(226, 33, 52, 0.2);
             background: rgba(42, 42, 42, 0.8);
           }
   
@@ -287,12 +287,12 @@
             cursor: pointer;
             font-weight: 700;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(29, 185, 84, 0.3);
+            box-shadow: 0 4px 15px rgba(226, 33, 52, 0.3);
   
             &:hover:not(:disabled) {
-              background: #1ed760;
+              background: #ff3050;
               transform: translateY(-2px);
-              box-shadow: 0 6px 20px rgba(29, 185, 84, 0.4);
+              box-shadow: 0 6px 20px rgba(226, 33, 52, 0.4);
             }
   
             &:disabled {
@@ -392,7 +392,7 @@
           transition: all 0.3s ease;
   
           &:hover {
-            border-color: rgba(29, 185, 84, 0.2);
+            border-color: rgba(226, 33, 52, 0.2);
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
           }
   
@@ -548,12 +548,12 @@
         text-decoration: none;
         font-weight: 700;
         padding: 0.8rem 1.5rem;
-        background: rgba(29, 185, 84, 0.1);
+        background: rgba(226, 33, 52, 0.1);
         border-radius: 50px;
         transition: all 0.3s ease;
   
         &:hover {
-          background: rgba(29, 185, 84, 0.2);
+          background: rgba(226, 33, 52, 0.2);
           transform: translateY(-2px);
         }
       }

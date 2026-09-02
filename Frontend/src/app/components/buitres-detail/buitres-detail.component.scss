@@ -68,13 +68,13 @@
 
 @keyframes flash-update {
   0% { transform: scale(1); }
-  50% { transform: scale(1.1); color: #1DB954; text-shadow: 0 0 10px rgba(29, 185, 84, 0.5); }
+  50% { transform: scale(1.1); color: #E22134; text-shadow: 0 0 10px rgba(226, 33, 52, 0.5); }
   100% { transform: scale(1); }
 }
 
 @keyframes flash-bg {
   0% { background-color: transparent; }
-  50% { background-color: rgba(29, 185, 84, 0.1); }
+  50% { background-color: rgba(226, 33, 52, 0.1); }
   100% { background-color: transparent; }
 }
 
@@ -102,8 +102,8 @@
   transition: all 0.2s;
 }
 .tag-item.verified {
-  border-color: #1DB954;
-  background: rgba(29, 185, 84, 0.1);
+  border-color: #E22134;
+  background: rgba(226, 33, 52, 0.1);
 }
 .tag-content {
   font-size: 0.9rem;
@@ -119,7 +119,7 @@
   align-items: center;
 }
 .tag-badge:hover { background: #505050; }
-.tag-badge i { color: #1DB954; }
+.tag-badge i { color: #E22134; }
 
 @keyframes heart-pop {
   0% { transform: scale(1); }
@@ -149,9 +149,9 @@
   margin-bottom: 15px;
 }
 .comment-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
-.anon-id { color: #1DB954; font-weight: bold; font-size: 0.9rem; }
+.anon-id { color: #E22134; font-weight: bold; font-size: 0.9rem; }
 .form-dark { background: #282828; border: 1px solid #404040; color: white; }
-.form-dark:focus { background: #333; color: white; border-color: #1DB954; box-shadow: none; }
+.form-dark:focus { background: #333; color: white; border-color: #E22134; box-shadow: none; }
 
 // Modal Styles
 .modal-overlay {
@@ -277,8 +277,8 @@
       i { font-size: 1.5rem; color: #888; }
     }
     &:hover .note-circle {
-      border-color: #1DB954;
-      i { color: #1DB954; }
+      border-color: #E22134;
+      i { color: #E22134; }
     }
   }
 }

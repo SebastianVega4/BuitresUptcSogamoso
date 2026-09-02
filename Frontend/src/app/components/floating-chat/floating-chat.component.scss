@@ -14,7 +14,7 @@
   color: white;
   border: none;
   cursor: pointer;
-  box-shadow: 0 6px 25px rgba(29, 185, 84, 0.5);
+  box-shadow: 0 6px 25px rgba(226, 33, 52, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -23,7 +23,7 @@
   
   &:hover {
     transform: scale(1.15);
-    box-shadow: 0 8px 30px rgba(29, 185, 84, 0.7);
+    box-shadow: 0 8px 30px rgba(226, 33, 52, 0.7);
   }
   
   &.has-unread {
@@ -208,7 +208,7 @@
     align-self: flex-end;
     background: linear-gradient(135deg, var(--primary-color), #1a8cff);
     color: white;
-    box-shadow: 0 4px 15px rgba(29, 185, 84, 0.3);
+    box-shadow: 0 4px 15px rgba(226, 33, 52, 0.3);
     
     .message-header {
       .username {
@@ -350,7 +350,7 @@
     &:focus {
       outline: none;
       border-color: var(--primary-color);
-      box-shadow: 0 0 0 3px rgba(29, 185, 84, 0.1);
+      box-shadow: 0 0 0 3px rgba(226, 33, 52, 0.1);
     }
     
     &:disabled {
@@ -373,7 +373,7 @@
     
     &:hover:not(:disabled) {
       transform: scale(1.1) rotate(5deg);
-      box-shadow: 0 6px 20px rgba(29, 185, 84, 0.4);
+      box-shadow: 0 6px 20px rgba(226, 33, 52, 0.4);
     }
     
     &:disabled {
@@ -430,7 +430,7 @@
     &:focus {
       outline: none;
       border-color: var(--primary-color);
-      box-shadow: 0 0 0 3px rgba(29, 185, 84, 0.1);
+      box-shadow: 0 0 0 3px rgba(226, 33, 52, 0.1);
     }
   }
   
@@ -466,7 +466,7 @@
       
       &:hover {
         transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(29, 185, 84, 0.3);
+        box-shadow: 0 6px 20px rgba(226, 33, 52, 0.3);
       }
     }
   }
@@ -497,10 +497,10 @@
 
 @keyframes pulse {
   0%, 100% {
-    box-shadow: 0 6px 25px rgba(29, 185, 84, 0.5);
+    box-shadow: 0 6px 25px rgba(226, 33, 52, 0.5);
   }
   50% {
-    box-shadow: 0 6px 30px rgba(29, 185, 84, 0.8);
+    box-shadow: 0 6px 30px rgba(226, 33, 52, 0.8);
   }
 }
 

@@ -49,8 +49,8 @@
   }
 
   &.success {
-    .icon-container i { color: #1ed760; }
-    h3 { color: #1ed760; }
+    .icon-container i { color: #ff3050; }
+    h3 { color: #ff3050; }
   }
 
   &.warning {
@@ -69,7 +69,7 @@
   }
 
   &.confirm {
-    .icon-container i { color: #1ed760; }
+    .icon-container i { color: #ff3050; }
     h3 { color: #fff; }
   }
 }
@@ -129,7 +129,7 @@
     color: #fff;
     
     &.success, &.confirm {
-      background: linear-gradient(135deg, #1ed760, #16a34a);
+      background: linear-gradient(135deg, #ff3050, #16a34a);
       box-shadow: 0 4px 15px rgba(30, 215, 96, 0.3);
     }
 
