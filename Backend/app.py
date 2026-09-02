@@ -24,6 +24,7 @@ app = Flask(__name__)
 allowed_origins = [
     "http://localhost:4200",
     "https://buitres-uptc-sogamoso.vercel.app",
+    "https://sebastianvega4.github.io",
 ]
 
 CORS(app, origins=allowed_origins, supports_credentials=True)
