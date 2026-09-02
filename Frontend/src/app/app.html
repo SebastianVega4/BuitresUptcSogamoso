@@ -2,7 +2,7 @@
   <header class="main-header">
     <div class="container d-flex justify-content-between align-items-center">
       <div class="logo-container">
-        <a routerLink="/" class="text-decoration-none text-white d-flex align-items-center">
+        <a routerLink="/buitres" class="text-decoration-none text-white d-flex align-items-center">
           <div class="logo-icon">
             <img src="logo.jpg" alt="Buitres UPTC" class="logo-img">
           </div>
@@ -15,10 +15,7 @@
       </button>
 
       <nav class="main-nav" [class.active]="isMenuOpen">
-        <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="toggleMenu()">
-          <i class="fas fa-home me-1"></i>Inicio
-        </a>
-        <a routerLink="/buitres" routerLinkActive="active" (click)="toggleMenu()">
+        <a routerLink="/buitres" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="toggleMenu()">
           <i class="fas fa-user-friends me-1"></i>Buitres
         </a>
         <a routerLink="/about" routerLinkActive="active" (click)="toggleMenu()">

@@ -5,17 +5,22 @@ import { BuitresGuard } from './guards/buitres.guard';
 export const routes: Routes = [
   { 
     path: '', 
-    loadComponent: () => import('./components/discussion/discussion.component').then(m => m.DiscussionComponent) 
+    redirectTo: 'buitres', 
+    pathMatch: 'full'
   },
   { 
     path: 'home', 
-    redirectTo: '', 
+    redirectTo: 'buitres', 
     pathMatch: 'full'
   },
   { 
-    path: 'discussion', 
-    redirectTo: '', 
-    pathMatch: 'full'
+    path: 'buitres', 
+    loadComponent: () => import('./components/buitres/buitres.component').then(m => m.BuitresComponent)
+  },
+  { 
+    path: 'buitres/person/:id', 
+    loadComponent: () => import('./components/buitres-detail/buitres-detail.component').then(m => m.BuitresDetailComponent),
+    canActivate: [BuitresGuard]
   },
   { 
     path: 'about', 
@@ -34,14 +39,5 @@ export const routes: Routes = [
     loadComponent: () => import('./components/admin-panel/admin-panel').then(m => m.AdminPanelComponent),
     canActivate: [AuthGuard] 
   },
-  { 
-    path: 'buitres', 
-    loadComponent: () => import('./components/buitres/buitres.component').then(m => m.BuitresComponent)
-  },
-  { 
-    path: 'buitres/person/:id', 
-    loadComponent: () => import('./components/buitres-detail/buitres-detail.component').then(m => m.BuitresDetailComponent),
-    canActivate: [BuitresGuard]
-  },
-  { path: '**', redirectTo: '' }
+  { path: '**', redirectTo: 'buitres' }
 ];

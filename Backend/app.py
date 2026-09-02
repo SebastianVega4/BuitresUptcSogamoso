@@ -42,10 +42,11 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 from werkzeug.utils import secure_filename
 from flask import send_from_directory
-from utils.image_handler import save_optimized_image
+from utils.image_handler import upload_to_r2, optimize_image
 
 @app.route('/uploads/<path:filename>')
 def serve_upload(filename):
+    """Serve locally uploaded files (legacy/fallback)."""
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 @app.route('/api/upload', methods=['POST'])
@@ -56,12 +57,26 @@ def upload_file():
     if file.filename == '':
         return jsonify({'error': 'No selected file'}), 400
     if file:
-        filename = save_optimized_image(file, app.config['UPLOAD_FOLDER'])
-        if filename:
-            file_url = f"{request.host_url}uploads/{filename}"
-            return jsonify({'url': file_url, 'filename': filename}), 201
-        else:
-            return jsonify({'error': 'File type not allowed or upload failed'}), 400
+        r2_url = upload_to_r2(file)
+        if r2_url:
+            return jsonify({'url': r2_url, 'filename': r2_url.split('/')[-1]}), 201
+
+        try:
+            file.seek(0)
+            result = optimize_image(file)
+            filename = result[0] if result else None
+            if filename:
+                os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                file.seek(0)
+                file.save(file_path)
+                file_url = f"{request.host_url}uploads/{filename}"
+                return jsonify({'url': file_url, 'filename': filename}), 201
+            else:
+                return jsonify({'error': 'File type not allowed or upload failed'}), 400
+        except Exception as e:
+            print(f"Fallback save error: {e}")
+            return jsonify({'error': 'Upload failed'}), 500
     return jsonify({'error': 'Upload failed'}), 500
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
