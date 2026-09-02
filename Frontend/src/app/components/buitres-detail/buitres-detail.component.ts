@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { BuitresService, BuitrePerson, BuitreDetail, BuitreComment, BuitreSongNote } from '../../services/buitres.service';
 import { AuthService } from '../../services/auth';
 import { ModalService } from '../../services/modal.service';
+import { MessageService } from '../../services/message.service';
 
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
@@ -71,8 +72,9 @@ export class BuitresDetailComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router,
     private buitresService: BuitresService,
-    private authService: AuthService,
-    private modalService: ModalService
+    public authService: AuthService,
+    private modalService: ModalService,
+    private messageService: MessageService
   ) {
     // Setup debounced search
     this.subscriptions.push(
@@ -125,6 +127,27 @@ export class BuitresDetailComponent implements OnInit, OnDestroy {
     }
     this.currentAudioUrl = null;
     this.isPlayingSubject.next(false);
+  }
+
+  // --- Private Chat ---
+
+  openChat() {
+    if (!this.authService.isBuitresLoggedIn()) {
+      this.modalService.alert('Debes iniciar sesión para enviar mensajes.', 'Acceso Restringido', 'warning');
+      return;
+    }
+    if (!this.person?.email) {
+      this.modalService.alert('Este perfil no tiene email registrado.', 'Error', 'warning');
+      return;
+    }
+    this.messageService.getOrCreateConversation(this.person.email).subscribe({
+      next: (res) => {
+        window.dispatchEvent(new CustomEvent('open-private-chat', { detail: { conversationId: res.conversation_id } }));
+      },
+      error: () => {
+        this.modalService.alert('No se pudo iniciar la conversación.', 'Error', 'danger');
+      }
+    });
   }
   
   // --- Song Notes Methods ---

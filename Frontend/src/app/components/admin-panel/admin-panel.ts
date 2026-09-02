@@ -18,6 +18,7 @@ export class AdminPanelComponent implements OnInit {
   isLoading = false;
   successMessage = '';
   errorMessage = '';
+  currentRole: string = 'moderator';
 
   constructor(
     private authService: AuthService,
@@ -26,8 +27,21 @@ export class AdminPanelComponent implements OnInit {
   ) { }
 
   ngOnInit() {
+    this.currentRole = this.authService.getAdminRole() || 'moderator';
     this.loadBuitresCount();
     this.loadAllBuitres();
+  }
+
+  get isSuperAdmin(): boolean {
+    return this.currentRole === 'super_admin';
+  }
+
+  get roleLabel(): string {
+    switch (this.currentRole) {
+      case 'super_admin': return 'Super Admin';
+      case 'moderator': return 'Moderador';
+      default: return this.currentRole;
+    }
   }
 
   loadBuitresCount() {

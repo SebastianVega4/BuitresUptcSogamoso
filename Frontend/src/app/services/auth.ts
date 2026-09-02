@@ -77,9 +77,42 @@ export class AuthService {
     if (!userData) return false;
     try {
       const user = JSON.parse(userData);
-      return user.role === 'admin';
+      return ['admin', 'super_admin', 'moderator'].includes(user.role);
     } catch (e) {
       return false;
+    }
+  }
+
+  isSuperAdmin(): boolean {
+    const userData = localStorage.getItem('adminUser');
+    if (!userData) return false;
+    try {
+      const user = JSON.parse(userData);
+      return user.role === 'super_admin';
+    } catch (e) {
+      return false;
+    }
+  }
+
+  isModerator(): boolean {
+    const userData = localStorage.getItem('adminUser');
+    if (!userData) return false;
+    try {
+      const user = JSON.parse(userData);
+      return user.role === 'moderator';
+    } catch (e) {
+      return false;
+    }
+  }
+
+  getAdminRole(): string | null {
+    const userData = localStorage.getItem('adminUser');
+    if (!userData) return null;
+    try {
+      const user = JSON.parse(userData);
+      return user.role || null;
+    } catch (e) {
+      return null;
     }
   }
 
@@ -121,6 +154,16 @@ export class AuthService {
     if (this.isRoleAdmin()) return this.getAdminToken();
     // Otherwise use buitres token
     return localStorage.getItem('buitresToken');
+  }
+
+  getBuitresUser(): any {
+    const userData = localStorage.getItem('buitresUser');
+    if (!userData) return null;
+    try {
+      return JSON.parse(userData);
+    } catch (e) {
+      return null;
+    }
   }
 
   // --- COMPATIBILITY ---

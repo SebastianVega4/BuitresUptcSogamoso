@@ -113,6 +113,29 @@ def verify_jwt_auth():
         print(f"Error decodificando token: {e}")
         return False
 
+def get_admin_role():
+    """Retorna el rol del admin ('super_admin', 'moderator', o None)."""
+    auth_header = request.headers.get('Authorization')
+    if not auth_header or not auth_header.startswith('Bearer '):
+        return None
+    try:
+        token = auth_header.split('Bearer ')[1]
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        if 'user_id' not in payload:
+            return None
+        result = supabase.table('admin_users').select('role').eq('id', payload['user_id']).execute()
+        if not result.data:
+            return None
+        return result.data[0].get('role', 'moderator')
+    except Exception:
+        return None
+
+def is_super_admin():
+    return get_admin_role() == 'super_admin'
+
+def is_moderator():
+    return get_admin_role() in ('super_admin', 'moderator')
+
 def verify_uptc_auth():
     auth_header = request.headers.get('Authorization')
     if not auth_header or not auth_header.startswith('Bearer '):
@@ -213,6 +236,7 @@ def login():
             return jsonify({"error": "Credenciales inválidas"}), 401
         token = jwt.encode({
             'user_id': user['id'],
+            'role': user.get('role', 'moderator'),
             'exp': datetime.now(timezone.utc) + timedelta(hours=24)
         }, JWT_SECRET, algorithm=JWT_ALGORITHM)
         return jsonify({
@@ -220,7 +244,7 @@ def login():
             "user": {
                 "id": user['id'],
                 "email": user['email'],
-                "role": "admin"
+                "role": user.get('role', 'moderator')
             }
         }), 200
     except Exception as e:
@@ -243,6 +267,7 @@ def handle_auth():
             return jsonify({"error": "Credenciales inválidas"}), 401
         token = jwt.encode({
             'user_id': user['id'],
+            'role': user.get('role', 'moderator'),
             'exp': datetime.now(timezone.utc) + timedelta(hours=24)
         }, JWT_SECRET, algorithm=JWT_ALGORITHM)
         return jsonify({
@@ -250,7 +275,8 @@ def handle_auth():
             "token": token,
             "user": {
                 "id": user['id'],
-                "email": user['email']
+                "email": user['email'],
+                "role": user.get('role', 'moderator')
             },
             "message": "Autenticación exitosa"
         }), 200
@@ -297,7 +323,8 @@ def create_thread():
             'title': title,
             'content': content,
             'image_url': data.get('image_url'),
-            'author_fingerprint': author_fingerprint
+            'author_fingerprint': author_fingerprint,
+            'user_email': get_current_user_email()
         }
         result = supabase.table('discussion_threads').insert(thread_data).execute()
         return jsonify(result.data[0]), 201
@@ -356,7 +383,8 @@ def add_comment(thread_id):
             'thread_id': thread_id,
             'author_fingerprint': author_fingerprint,
             'content': data['content'],
-            'parent_comment_id': data.get('parent_comment_id')
+            'parent_comment_id': data.get('parent_comment_id'),
+            'user_email': get_current_user_email()
         }
         result = supabase.table('thread_comments').insert(comment_data).execute()
         comments_count = supabase.table('thread_comments')\
@@ -379,7 +407,8 @@ def like_item():
         like_data = {
             'user_fingerprint': user_fingerprint,
             'thread_id': data.get('thread_id'),
-            'comment_id': data.get('comment_id')
+            'comment_id': data.get('comment_id'),
+            'user_email': get_current_user_email()
         }
         existing_query = supabase.table('discussion_likes')\
             .select('*')\
@@ -986,7 +1015,8 @@ def add_buitre_detail(person_id):
                     'target_id': person_id,
                     'target_type': 'tag_vote',
                     'author_fingerprint': fingerprint,
-                    'content_snapshot': real_content
+                    'content_snapshot': real_content,
+                    'user_email': get_current_user_email()
                 }).execute()
                 raw_count = detail_query.data[0].get('occurrence_count')
                 current_count = int(raw_count) if raw_count is not None else 0
@@ -1012,19 +1042,22 @@ def add_buitre_detail(person_id):
                 result = supabase.table('buitres_details').insert({
                     'person_id': person_id,
                     'content': content,
-                    'occurrence_count': 1
+                    'occurrence_count': 1,
+                    'user_email': get_current_user_email()
                 }).execute()
                 supabase.table('buitres_interactions').insert({
                     'target_id': person_id,
                     'target_type': 'tag_create',
                     'author_fingerprint': fingerprint,
-                    'content_snapshot': content
+                    'content_snapshot': content,
+                    'user_email': get_current_user_email()
                 }).execute()
                 supabase.table('buitres_interactions').insert({
                     'target_id': person_id,
                     'target_type': 'tag_vote',
                     'author_fingerprint': fingerprint,
-                    'content_snapshot': content
+                    'content_snapshot': content,
+                    'user_email': get_current_user_email()
                 }).execute()
                 data = result.data[0] if result.data else {"content": content, "occurrence_count": 1}
                 return jsonify({"action": "added", "new_count": 1, "data": data}), 201
@@ -1080,7 +1113,8 @@ def add_buitre_comment(person_id):
         comment_data = {
             'person_id': person_id,
             'content': content,
-            'author_fingerprint': fingerprint
+            'author_fingerprint': fingerprint,
+            'user_email': get_current_user_email()
         }
         result = supabase.table('buitres_comments').insert([comment_data]).execute()
         return jsonify(result.data[0]), 201
@@ -1393,6 +1427,187 @@ def search_music():
             print(f"Spotify search error: {e}")
 
     return jsonify([]), 200
+
+
+# ========== PRIVATE MESSAGES ==========
+
+@app.route('/api/messages/send', methods=['POST'])
+def send_message():
+    """Enviar un mensaje privado. Requiere auth UPTC."""
+    is_authed, _ = verify_uptc_auth()
+    if not is_authed:
+        return jsonify({"error": "Debes iniciar sesión para enviar mensajes"}), 401
+    try:
+        data = request.get_json()
+        recipient_id = data.get('recipient_id')
+        content = data.get('content', '').strip()
+        if not recipient_id or not content:
+            return jsonify({"error": "Faltan campos requeridos"}), 400
+        sender_email = get_current_user_email()
+        if not sender_email:
+            return jsonify({"error": "No se pudo identificar al remitente"}), 400
+        if sender_email == recipient_id:
+            return jsonify({"error": "No puedes enviarte mensajes a ti mismo"}), 400
+        conv_key = '_'.join(sorted([sender_email, recipient_id]))
+        existing = supabase.table('private_conversations')\
+            .select('id')\
+            .eq('conversation_key', conv_key)\
+            .execute()
+        if existing.data:
+            conv_id = existing.data[0]['id']
+        else:
+            conv_result = supabase.table('private_conversations').insert({
+                'participant_1': sorted([sender_email, recipient_id])[0],
+                'participant_2': sorted([sender_email, recipient_id])[1],
+                'conversation_key': conv_key
+            }).execute()
+            conv_id = conv_result.data[0]['id']
+            supabase.table('private_conversations').update({
+                'last_message': content,
+                'last_message_at': datetime.now(timezone.utc).isoformat(),
+                'last_message_by': sender_email
+            }).eq('id', conv_id).execute()
+        msg_result = supabase.table('private_messages').insert({
+            'conversation_id': conv_id,
+            'sender_email': sender_email,
+            'content': content
+        }).execute()
+        supabase.table('private_conversations').update({
+            'last_message': content,
+            'last_message_at': datetime.now(timezone.utc).isoformat(),
+            'last_message_by': sender_email
+        }).eq('id', conv_id).execute()
+        return jsonify({
+            "message": msg_result.data[0],
+            "conversation_id": conv_id
+        }), 201
+    except Exception as e:
+        print(f"Error sending message: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/api/messages/conversations', methods=['GET'])
+def get_conversations():
+    """Listar conversaciones del usuario autenticado."""
+    is_authed, _ = verify_uptc_auth()
+    if not is_authed:
+        return jsonify({"error": "No autorizado"}), 401
+    try:
+        user_email = get_current_user_email()
+        result = supabase.table('private_conversations')\
+            .select('*')\
+            .or_(f'participant_1.eq.{user_email},participant_2.eq.{user_email}')\
+            .order('last_message_at', desc=True)\
+            .execute()
+        conversations = []
+        for conv in result.data:
+            other = conv['participant_2'] if conv['participant_1'] == user_email else conv['participant_1']
+            unread = supabase.table('private_messages')\
+                .select('id', count='exact')\
+                .eq('conversation_id', conv['id'])\
+                .eq('sender_email', other)\
+                .eq('is_read', False)\
+                .execute()
+            conversations.append({
+                'id': conv['id'],
+                'other_user': other,
+                'last_message': conv.get('last_message', ''),
+                'last_message_at': conv.get('last_message_at'),
+                'last_message_by': conv.get('last_message_by'),
+                'unread_count': unread.count if unread.count else 0
+            })
+        return jsonify(conversations), 200
+    except Exception as e:
+        print(f"Error getting conversations: {e}")
+        return jsonify([]), 200
+
+
+@app.route('/api/messages/<conv_id>', methods=['GET'])
+def get_messages(conv_id):
+    """Obtener mensajes de una conversación."""
+    is_authed, _ = verify_uptc_auth()
+    if not is_authed:
+        return jsonify({"error": "No autorizado"}), 401
+    try:
+        user_email = get_current_user_email()
+        conv_check = supabase.table('private_conversations')\
+            .select('*')\
+            .eq('id', conv_id)\
+            .execute()
+        if not conv_check.data:
+            return jsonify({"error": "Conversación no encontrada"}), 404
+        conv = conv_check.data[0]
+        if user_email not in (conv['participant_1'], conv['participant_2']):
+            return jsonify({"error": "No tienes acceso a esta conversación"}), 403
+        messages = supabase.table('private_messages')\
+            .select('*')\
+            .eq('conversation_id', conv_id)\
+            .order('created_at', desc=False)\
+            .execute()
+        supabase.table('private_messages')\
+            .update({'is_read': True})\
+            .eq('conversation_id', conv_id)\
+            .neq('sender_email', user_email)\
+            .eq('is_read', False)\
+            .execute()
+        return jsonify(messages.data), 200
+    except Exception as e:
+        print(f"Error getting messages: {e}")
+        return jsonify([]), 200
+
+
+@app.route('/api/messages/unread', methods=['GET'])
+def get_unread_count():
+    """Contar mensajes no leídos total del usuario."""
+    is_authed, _ = verify_uptc_auth()
+    if not is_authed:
+        return jsonify({"unread": 0}), 200
+    try:
+        user_email = get_current_user_email()
+        convs = supabase.table('private_conversations')\
+            .select('id')\
+            .or_(f'participant_1.eq.{user_email},participant_2.eq.{user_email}')\
+            .execute()
+        total = 0
+        for c in convs.data:
+            unread = supabase.table('private_messages')\
+                .select('id', count='exact')\
+                .eq('conversation_id', c['id'])\
+                .neq('sender_email', user_email)\
+                .eq('is_read', False)\
+                .execute()
+            total += unread.count if unread.count else 0
+        return jsonify({"unread": total}), 200
+    except Exception as e:
+        print(f"Error getting unread count: {e}")
+        return jsonify({"unread": 0}), 200
+
+
+@app.route('/api/messages/user/<target_email>', methods=['GET'])
+def get_or_create_conversation_with_user(target_email):
+    """Obtener o crear conversación con un usuario específico (para enviar primer mensaje)."""
+    is_authed, _ = verify_uptc_auth()
+    if not is_authed:
+        return jsonify({"error": "No autorizado"}), 401
+    try:
+        user_email = get_current_user_email()
+        conv_key = '_'.join(sorted([user_email, target_email]))
+        existing = supabase.table('private_conversations')\
+            .select('id')\
+            .eq('conversation_key', conv_key)\
+            .execute()
+        if existing.data:
+            return jsonify({"conversation_id": existing.data[0]['id']}), 200
+        conv_result = supabase.table('private_conversations').insert({
+            'participant_1': sorted([user_email, target_email])[0],
+            'participant_2': sorted([user_email, target_email])[1],
+            'conversation_key': conv_key
+        }).execute()
+        return jsonify({"conversation_id": conv_result.data[0]['id']}), 201
+    except Exception as e:
+        print(f"Error getting/creating conversation: {e}")
+        return jsonify({"error": str(e)}), 500
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

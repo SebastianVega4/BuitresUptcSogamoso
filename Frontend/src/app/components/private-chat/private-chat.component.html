@@ -1,0 +1,96 @@
+<!-- Floating Chat Button -->
+<div class="chat-fab" *ngIf="isLoggedIn" (click)="toggleChat()">
+  <i class="fas fa-comments"></i>
+</div>
+
+<!-- Chat Panel -->
+<div class="chat-panel" *ngIf="isOpen && isLoggedIn">
+  <!-- Header -->
+  <div class="chat-header">
+    <button class="back-btn" *ngIf="activeConversation" (click)="goBack()">
+      <i class="fas fa-arrow-left"></i>
+    </button>
+    <span class="header-title">
+      {{ activeConversation ? 'Mensajes' : 'Chat Privado' }}
+    </span>
+    <button class="close-btn" (click)="toggleChat()">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <!-- Conversations List -->
+  <div class="chat-body" *ngIf="!activeConversation">
+    <!-- New conversation input -->
+    <div class="new-conversation">
+      <input
+        type="email"
+        [(ngModel)]="targetEmail"
+        placeholder="Email @uptc.edu.co..."
+        (keyup.enter)="startNewConversation()"
+      />
+      <button
+        (click)="startNewConversation()"
+        [disabled]="isCreatingConversation || !targetEmail.trim()"
+      >
+        <i class="fas fa-paper-plane"></i>
+      </button>
+    </div>
+
+    <!-- Conversation list -->
+    <div class="conversations-list">
+      <div
+        class="conversation-item"
+        *ngFor="let conv of conversations"
+        (click)="openConversation(conv.id)"
+      >
+        <div class="conv-avatar">
+          <i class="fas fa-user"></i>
+        </div>
+        <div class="conv-info">
+          <span class="conv-email">{{ getOtherEmail(conv) }}</span>
+          <span class="conv-preview">{{ conv.last_message }}</span>
+        </div>
+        <div class="conv-meta">
+          <span class="conv-time">{{ formatDate(conv.last_message_at) }}</span>
+          <span class="conv-unread" *ngIf="conv.unread_count > 0">
+            {{ conv.unread_count }}
+          </span>
+        </div>
+      </div>
+      <div class="empty-state" *ngIf="conversations.length === 0">
+        <i class="fas fa-inbox"></i>
+        <p>No hay conversaciones</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Messages View -->
+  <div class="chat-body" *ngIf="activeConversation">
+    <div class="messages-container" #messagesContainer>
+      <div
+        class="message"
+        *ngFor="let msg of messages"
+        [class.my-message]="isMyMessage(msg)"
+      >
+        <span class="message-sender" *ngIf="!isMyMessage(msg)">
+          {{ msg.sender_email }}
+        </span>
+        <div class="message-bubble">
+          {{ msg.content }}
+        </div>
+        <span class="message-time">{{ formatDate(msg.created_at) }}</span>
+      </div>
+    </div>
+    <div class="message-input">
+      <input
+        type="text"
+        [(ngModel)]="newMessage"
+        placeholder="Escribe un mensaje..."
+        (keyup.enter)="sendMessage()"
+      />
+      <button (click)="sendMessage()" [disabled]="!newMessage.trim()">
+        <i class="fas fa-paper-plane"></i>
+      </button>
+    </div>
+  </div>
+</div>

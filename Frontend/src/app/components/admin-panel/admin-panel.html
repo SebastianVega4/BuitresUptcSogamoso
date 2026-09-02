@@ -13,7 +13,10 @@
       <h1>
         <i class="fas fa-crow me-2"></i>Panel de Administración
       </h1>
-      <p class="header-subtitle">Gestiona los buitres de la comunidad</p>
+      <p class="header-subtitle">
+        Gestiona los buitres de la comunidad
+        <span class="role-badge" [class]="'role-' + currentRole">{{ roleLabel }}</span>
+      </p>
     </div>
     <button class="btn-logout" (click)="logout()">
       <i class="fas fa-sign-out-alt me-1"></i>Cerrar Sesión
@@ -77,7 +80,7 @@
               <a [routerLink]="['/buitres/person', buitre.id]" class="btn-action btn-view">
                 <i class="fas fa-eye"></i>
               </a>
-              <button class="btn-action btn-delete" (click)="deleteBuitre(buitre.id, buitre.name)">
+              <button class="btn-action btn-delete" *ngIf="isSuperAdmin" (click)="deleteBuitre(buitre.id, buitre.name)">
                 <i class="fas fa-trash"></i>
               </button>
             </div>
