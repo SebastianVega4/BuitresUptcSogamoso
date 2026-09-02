@@ -1,4 +1,19 @@
 <div class="discussion-container">
+    <!-- Banner de reglas -->
+    <div class="rules-banner mb-3">
+        <a routerLink="/about" class="rules-card">
+            <div class="rules-content">
+                <div class="rules-icon">
+                    <i class="fas fa-book-open"></i>
+                </div>
+                <div class="rules-text">
+                    <span class="rules-title">Reglas y funcionamiento de la seccion de Buitres:</span>
+                    <span class="rules-action">Ver Reglamento <i class="fas fa-arrow-right ms-1"></i></span>
+                </div>
+            </div>
+        </a>
+    </div>
+
     <!-- Header del foro -->
     <div class="discussion-header">
         <div class="header-content">
@@ -30,7 +45,7 @@
 
             <div class="form-group">
                 <label>Imagen (opcional)</label>
-                <input type="file" (change)="onFileSelected($event)" accept="image/*" class="form-control-file">
+                <input type="file" (change)="onFileSelected($event)" accept="image/jpeg,image/png,image/gif,image/webp" class="form-control-file">
                 <div *ngIf="selectedFile" class="text-success mt-1">
                     <small>Imagen seleccionada: {{ selectedFile.name }}</small>
                 </div>

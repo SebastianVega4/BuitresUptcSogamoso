@@ -113,7 +113,18 @@ export class BuitresDetailComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    this.stopAudio();
     this.subscriptions.forEach(s => s.unsubscribe());
+  }
+
+  private stopAudio() {
+    if (this.audio) {
+      this.audio.pause();
+      this.audio.src = '';
+      this.audio = null;
+    }
+    this.currentAudioUrl = null;
+    this.isPlayingSubject.next(false);
   }
   
   // --- Song Notes Methods ---
@@ -218,6 +229,13 @@ export class BuitresDetailComponent implements OnInit, OnDestroy {
     return !!url && this.currentAudioUrl === url && !!this.audio && !this.audio.paused;
   }
 
+  onPlaySearch(song: any, event: Event) {
+    event.stopPropagation();
+    this.playPreview(song.preview_url, event);
+  }
+
+  private _switchingAudio = false;
+
   playPreview(url: string | null | undefined, event?: Event) {
     if (event) {
       event.stopPropagation();
@@ -227,45 +245,71 @@ export class BuitresDetailComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Toggle: same song playing → pause it
     if (this.audio && this.currentAudioUrl === url && !this.audio.paused) {
+      this._switchingAudio = true;
       this.audio.pause();
-      this.currentAudioUrl = null;
+      this._switchingAudio = false;
       this.isPlayingSubject.next(false);
-      this.audio = null;
       return;
     }
 
-    if (this.audio) {
-      this.audio.pause();
-      this.audio = null;
+    // Same song but paused → resume
+    if (this.audio && this.currentAudioUrl === url && this.audio.paused) {
+      this.audio.play().then(() => {
+        this.isPlayingSubject.next(true);
+      }).catch(() => {});
+      return;
     }
 
-    const previewAudio = new Audio(url);
+    // Different song → stop old, start new
+    this._switchingAudio = true;
+    if (this.audio) {
+      this.audio.onended = null;
+      this.audio.onpause = null;
+      this.audio.onplaying = null;
+      this.audio.pause();
+      this.audio.src = '';
+    }
+
+    const previewAudio = new Audio();
+    previewAudio.crossOrigin = 'anonymous';
+    previewAudio.preload = 'auto';
+    previewAudio.src = url;
     this.audio = previewAudio;
     this.currentAudioUrl = url;
     this.isPlayingSubject.next(true);
+    this._switchingAudio = false;
 
     previewAudio.onended = () => {
-      if (this.currentAudioUrl === url) {
-        this.currentAudioUrl = null;
+      if (this.audio === previewAudio) {
         this.isPlayingSubject.next(false);
+        this.currentAudioUrl = null;
         this.audio = null;
       }
     };
 
     previewAudio.onpause = () => {
-      if (this.currentAudioUrl === url && previewAudio.paused) {
-        this.currentAudioUrl = null;
+      if (this._switchingAudio) return;
+      if (this.audio === previewAudio) {
         this.isPlayingSubject.next(false);
-        this.audio = null;
       }
     };
 
     previewAudio.play().catch(() => {
-      this.currentAudioUrl = null;
-      this.isPlayingSubject.next(false);
-      this.audio = null;
-      this.modalService.alert('No se pudo reproducir la vista previa.', 'Aviso', 'info');
+      // Browser autoplay blocked - audio may still play after user gesture
+      // Check after a short delay if audio actually started
+      setTimeout(() => {
+        if (this.audio === previewAudio) {
+          if (!previewAudio.paused && !previewAudio.ended) {
+            this.isPlayingSubject.next(true);
+          } else {
+            this.isPlayingSubject.next(false);
+            this.currentAudioUrl = null;
+            this.audio = null;
+          }
+        }
+      }, 300);
     });
   }
 
@@ -527,12 +571,23 @@ export class BuitresDetailComponent implements OnInit, OnDestroy {
 
   selectedFile: File | null = null;
   isUploading: boolean = false;
+  private readonly ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+  private readonly MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
   onFileSelected(event: any) {
     const file = event.target.files[0];
-    if (file) {
-      this.selectedFile = file;
+    if (!file) return;
+    if (!this.ALLOWED_TYPES.includes(file.type)) {
+      this.modalService.alert('Solo se permiten archivos de imagen (JPEG, PNG, GIF, WebP).', 'Formato no válido', 'warning');
+      event.target.value = '';
+      return;
     }
+    if (file.size > this.MAX_FILE_SIZE) {
+      this.modalService.alert('La imagen no debe superar 5MB.', 'Archivo muy grande', 'warning');
+      event.target.value = '';
+      return;
+    }
+    this.selectedFile = file;
   }
 
   saveEdits() {

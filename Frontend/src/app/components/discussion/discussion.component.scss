@@ -349,6 +349,45 @@
     }
   }
   
+  .rules-banner {
+    .rules-card {
+      display: block;
+      text-decoration: none;
+      background: linear-gradient(135deg, rgba(255, 193, 7, 0.1), rgba(255, 152, 0, 0.05));
+      border: 1px solid rgba(255, 193, 7, 0.3);
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+      transition: all 0.3s ease;
+      &:hover {
+        background: linear-gradient(135deg, rgba(255, 193, 7, 0.2), rgba(255, 152, 0, 0.1));
+        transform: translateY(-2px);
+      }
+    }
+    .rules-content {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .rules-icon {
+      font-size: 1.5rem;
+      color: #ffc107;
+    }
+    .rules-text {
+      display: flex;
+      flex-direction: column;
+      .rules-title {
+        color: #ffc107;
+        font-weight: 600;
+        font-size: 0.95rem;
+      }
+      .rules-action {
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        margin-top: 2px;
+      }
+    }
+  }
+  
   // Responsive
   @media (max-width: 768px) {
     .discussion-container { padding: 1rem; }

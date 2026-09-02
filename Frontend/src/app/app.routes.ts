@@ -5,19 +5,21 @@ import { BuitresGuard } from './guards/buitres.guard';
 export const routes: Routes = [
   { 
     path: '', 
-    loadComponent: () => import('./components/home/home').then(m => m.HomeComponent) 
+    loadComponent: () => import('./components/discussion/discussion.component').then(m => m.DiscussionComponent) 
   },
   { 
     path: 'home', 
-    loadComponent: () => import('./components/home/home').then(m => m.HomeComponent) 
+    redirectTo: '', 
+    pathMatch: 'full'
+  },
+  { 
+    path: 'discussion', 
+    redirectTo: '', 
+    pathMatch: 'full'
   },
   { 
     path: 'about', 
     loadComponent: () => import('./components/about/about.component').then(m => m.AboutComponent) 
-  },
-  { 
-    path: 'discussion', 
-    loadComponent: () => import('./components/discussion/discussion.component').then(m => m.DiscussionComponent) 
   },
   { 
     path: 'discussion/thread/:id', 

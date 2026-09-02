@@ -1201,7 +1201,6 @@ def get_person_songs(person_id):
         result = supabase.table('buitres_song_notes')\
             .select('*')\
             .eq('person_id', person_id)\
-            .gt('expires_at', datetime.now(timezone.utc).isoformat())\
             .order('created_at', desc=True)\
             .execute()
         return jsonify(result.data), 200
@@ -1230,12 +1229,20 @@ def add_person_song(person_id):
                 'type': 'text',
                 'bg_color': data.get('bg_color', 'linear-gradient(45deg, #FF9A9E 0%, #FECFEF 99%, #FECFEF 100%)')
             }
-        expires_at = (datetime.now(timezone.utc) + timedelta(days=7)).isoformat()
+
+        existing = supabase.table('buitres_song_notes')\
+            .select('id')\
+            .eq('person_id', person_id)\
+            .order('created_at', desc=False)\
+            .execute()
+        if existing.data and len(existing.data) >= 30:
+            oldest_id = existing.data[0]['id']
+            supabase.table('buitres_song_notes').delete().eq('id', oldest_id).execute()
+
         note_data = {
             'person_id': person_id,
             'track_data': track_data,
             'dedication': dedication,
-            'expires_at': expires_at,
             'created_by': get_current_user_email()
         }
         result = supabase.table('buitres_song_notes').insert(note_data).execute()
@@ -1270,6 +1277,107 @@ def delete_song_note(note_id):
         return jsonify({"success": True}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+SPOTIFY_CLIENT_ID = os.environ.get("SPOTIFY_CLIENT_ID", "")
+SPOTIFY_CLIENT_SECRET = os.environ.get("SPOTIFY_CLIENT_SECRET", "")
+_spotify_token = None
+_spotify_token_expires = 0
+
+def get_spotify_token():
+    global _spotify_token, _spotify_token_expires
+    import time
+    if _spotify_token and time.time() < _spotify_token_expires:
+        return _spotify_token
+    if not SPOTIFY_CLIENT_ID or not SPOTIFY_CLIENT_SECRET:
+        return None
+    try:
+        resp = requests.post(
+            'https://accounts.spotify.com/api/token',
+            data={'grant_type': 'client_credentials', 'client_id': SPOTIFY_CLIENT_ID, 'client_secret': SPOTIFY_CLIENT_SECRET},
+            headers={'Content-Type': 'application/x-www-form-urlencoded'},
+            timeout=5
+        )
+        if resp.status_code == 200:
+            data = resp.json()
+            _spotify_token = data['access_token']
+            _spotify_token_expires = time.time() + data.get('expires_in', 3600) - 60
+            return _spotify_token
+    except Exception as e:
+        print(f"Spotify token error: {e}")
+    return None
+
+@app.route('/api/search', methods=['GET'])
+def search_music():
+    query = request.args.get('q', '').strip()
+    if not query:
+        return jsonify([]), 200
+
+    # iTunes first - always has preview URLs that work
+    try:
+        resp = requests.get(
+            'https://itunes.apple.com/search',
+            params={'term': query, 'media': 'music', 'limit': 20, 'country': 'us'},
+            timeout=5
+        )
+        if resp.status_code == 200:
+            items = resp.json().get('results', [])
+            results = []
+            for t in items:
+                if not t.get('previewUrl'):
+                    continue
+                results.append({
+                    'id': str(t.get('trackId', '')),
+                    'uri': f"itunes:track:{t.get('trackId', '')}",
+                    'name': t.get('trackName', ''),
+                    'album': t.get('collectionName', ''),
+                    'image': t.get('artworkUrl100', '').replace('100x100', '300x300'),
+                    'artists': [t.get('artistName', '')],
+                    'duration_ms': t.get('trackTimeMillis', 0),
+                    'preview_url': t.get('previewUrl'),
+                    'external_url': t.get('trackViewUrl', ''),
+                    'source': 'itunes'
+                })
+            if results:
+                return jsonify(results), 200
+    except Exception as e:
+        print(f"iTunes search error: {e}")
+
+    # Spotify fallback
+    token = get_spotify_token()
+    if token:
+        try:
+            resp = requests.get(
+                'https://api.spotify.com/v1/search',
+                params={'q': query, 'type': 'track', 'limit': 20},
+                headers={'Authorization': f'Bearer {token}'},
+                timeout=5
+            )
+            if resp.status_code == 200:
+                items = resp.json().get('tracks', {}).get('items', [])
+                results = []
+                for t in items:
+                    if not t.get('preview_url'):
+                        continue
+                    album_images = t.get('album', {}).get('images', [])
+                    image = album_images[0]['url'] if album_images else None
+                    results.append({
+                        'id': t['id'],
+                        'uri': t['uri'],
+                        'name': t['name'],
+                        'album': t.get('album', {}).get('name', ''),
+                        'image': image,
+                        'artists': [a['name'] for a in t.get('artists', [])],
+                        'duration_ms': t.get('duration_ms', 0),
+                        'preview_url': t.get('preview_url'),
+                        'external_url': t.get('external_urls', {}).get('spotify', ''),
+                        'source': 'spotify'
+                    })
+                if results:
+                    return jsonify(results), 200
+        except Exception as e:
+            print(f"Spotify search error: {e}")
+
+    return jsonify([]), 200
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

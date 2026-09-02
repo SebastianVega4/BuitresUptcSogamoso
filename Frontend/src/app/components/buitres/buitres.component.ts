@@ -19,7 +19,7 @@ import { DiscussionComponent } from '../discussion/discussion.component';
   styleUrls: ['./buitres.component.scss']
 })
 export class BuitresComponent implements OnInit, AfterViewInit, OnDestroy {
-  activeTab: 'people' | 'discussion' = 'discussion'; // Control de pestañas
+  activeTab: 'people' | 'discussion' = 'people'; // Control de pestañas
   people: BuitrePerson[] = [];
   suggestions: BuitrePerson[] = [];
   searchQuery: string = '';

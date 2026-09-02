@@ -58,12 +58,24 @@ export class DiscussionComponent implements OnInit {
   }
 
   selectedFile: File | null = null;
+  private readonly ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+  private readonly MAX_SIZE = 5 * 1024 * 1024; // 5MB
 
   onFileSelected(event: any) {
     const file = event.target.files[0];
-    if (file) {
-      this.selectedFile = file;
+    if (!file) return;
+    if (!this.ALLOWED_TYPES.includes(file.type)) {
+      this.error = 'Solo se permiten archivos de imagen (JPEG, PNG, GIF, WebP).';
+      event.target.value = '';
+      return;
     }
+    if (file.size > this.MAX_SIZE) {
+      this.error = 'La imagen no debe superar 5MB.';
+      event.target.value = '';
+      return;
+    }
+    this.error = null;
+    this.selectedFile = file;
   }
 
   createThread() {
