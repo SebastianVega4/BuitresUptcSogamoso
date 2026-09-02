@@ -77,12 +77,12 @@
 
                 <!-- Song Note -->
                 <div *ngIf="!note.track_data.type || note.track_data.type === 'song'" class="note-circle"
-                    [class.playing]="audioService.isCurrentSong(note.track_data.preview_url) && (audioService.isPlaying$ | async)">
+                    [class.playing]="isCurrentSong(note.track_data.preview_url) && (isPlaying$ | async)">
                     <img [src]="note.track_data.image" [alt]="note.track_data.name">
                     <div class="note-overlay">
                         <i class="fas"
-                            [class.fa-pause]="audioService.isCurrentSong(note.track_data.preview_url) && (audioService.isPlaying$ | async)"
-                            [class.fa-music]="!(audioService.isCurrentSong(note.track_data.preview_url) && (audioService.isPlaying$ | async))"></i>
+                            [class.fa-pause]="isCurrentSong(note.track_data.preview_url) && (isPlaying$ | async)"
+                            [class.fa-music]="!(isCurrentSong(note.track_data.preview_url) && (isPlaying$ | async))"></i>
                     </div>
                 </div>
 
@@ -253,8 +253,8 @@
                         style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;"
                         (click)="playPreview(song.preview_url, $event)" [disabled]="!song.preview_url">
                         <i class="fas"
-                            [class.fa-play]="!audioService.isCurrentSong(song.preview_url) || !(audioService.isPlaying$ | async)"
-                            [class.fa-pause]="audioService.isCurrentSong(song.preview_url) && (audioService.isPlaying$ | async)"></i>
+                            [class.fa-play]="!isCurrentSong(song.preview_url) || !(isPlaying$ | async)"
+                            [class.fa-pause]="isCurrentSong(song.preview_url) && (isPlaying$ | async)"></i>
                     </button>
 
                     <button class="btn btn-sm btn-outline-primary"><i class="fas fa-check"></i></button>

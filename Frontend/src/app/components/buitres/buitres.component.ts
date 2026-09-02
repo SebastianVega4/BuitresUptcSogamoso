@@ -98,7 +98,7 @@ export class BuitresComponent implements OnInit, AfterViewInit, OnDestroy {
 
   renderGoogleButton() {
     google.accounts.id.initialize({
-      client_id: '361673258362-sf6ils8hu37d9b5ptmvds329aspgtiao.apps.googleusercontent.com',
+      client_id: '1030499438916-toa8mui8pqv7urhn1rfppi9r70qgo9v1.apps.googleusercontent.com',
       callback: (response: any) => this.handleGoogleLogin(response)
     });
 

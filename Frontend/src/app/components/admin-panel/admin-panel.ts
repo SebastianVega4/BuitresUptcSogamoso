@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth';
 import { BuitresService } from '../../services/buitres.service';
@@ -9,7 +9,7 @@ import { BuitresService } from '../../services/buitres.service';
   templateUrl: './admin-panel.html',
   styleUrls: ['./admin-panel.scss'],
   standalone: true,
-  imports: [CommonModule]
+  imports: [CommonModule, RouterLink]
 })
 export class AdminPanelComponent implements OnInit {
   activeSection = 'dashboard';

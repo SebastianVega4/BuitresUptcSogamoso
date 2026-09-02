@@ -1,6 +1,6 @@
 export const environment = {
   production: false,
-  apiUrl: 'https://api.uptcmusic.com',
-  supabaseUrl: 'https://nkojabtbosvzbfcveyfm.supabase.co',
-  supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5rb2phYnRib3N2emJmY3ZleWZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTczNjgwNzAsImV4cCI6MjA3Mjk0NDA3MH0.rJdadnVoVBw-vrt2XCm3619YzSIX3jSaxRftJQdAw00',
+  apiUrl: 'http://127.0.0.1:5000',
+  supabaseUrl: 'https://yyyqotziuadvmtxqdime.supabase.co',
+  supabaseKey: 'sb_publishable_rROZQEmOx9Sz5S-k6eCnvw_VWCvtJN0',
 };

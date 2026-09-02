@@ -7,7 +7,7 @@ import { AuthService } from '../../services/auth';
 import { ModalService } from '../../services/modal.service';
 
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
-import { Subject } from 'rxjs';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
 
 @Component({
   selector: 'app-buitres-detail',
@@ -62,7 +62,10 @@ export class BuitresDetailComponent implements OnInit, OnDestroy {
 
   private subscriptions: any[] = [];
 
+  private currentAudioUrl: string | null = null;
   private audio: HTMLAudioElement | null = null;
+  private readonly isPlayingSubject = new BehaviorSubject<boolean>(false);
+  public readonly isPlaying$: Observable<boolean> = this.isPlayingSubject.asObservable();
 
   constructor(
     private route: ActivatedRoute,
@@ -211,21 +214,59 @@ export class BuitresDetailComponent implements OnInit, OnDestroy {
     });
   }
 
+  public isCurrentSong(url: string | null | undefined): boolean {
+    return !!url && this.currentAudioUrl === url && !!this.audio && !this.audio.paused;
+  }
+
   playPreview(url: string | null | undefined, event?: Event) {
     if (event) {
       event.stopPropagation();
     }
-    if (url) {
-      if (this.audio) {
-        this.audio.pause();
-      }
-      this.audio = new Audio(url);
-      this.audio.play().catch(() => {
-        this.modalService.alert('No se pudo reproducir la vista previa.', 'Aviso', 'info');
-      });
-    } else {
+    if (!url) {
       this.modalService.alert('Esta canción no tiene vista previa disponible.', 'Aviso', 'info');
+      return;
     }
+
+    if (this.audio && this.currentAudioUrl === url && !this.audio.paused) {
+      this.audio.pause();
+      this.currentAudioUrl = null;
+      this.isPlayingSubject.next(false);
+      this.audio = null;
+      return;
+    }
+
+    if (this.audio) {
+      this.audio.pause();
+      this.audio = null;
+    }
+
+    const previewAudio = new Audio(url);
+    this.audio = previewAudio;
+    this.currentAudioUrl = url;
+    this.isPlayingSubject.next(true);
+
+    previewAudio.onended = () => {
+      if (this.currentAudioUrl === url) {
+        this.currentAudioUrl = null;
+        this.isPlayingSubject.next(false);
+        this.audio = null;
+      }
+    };
+
+    previewAudio.onpause = () => {
+      if (this.currentAudioUrl === url && previewAudio.paused) {
+        this.currentAudioUrl = null;
+        this.isPlayingSubject.next(false);
+        this.audio = null;
+      }
+    };
+
+    previewAudio.play().catch(() => {
+      this.currentAudioUrl = null;
+      this.isPlayingSubject.next(false);
+      this.audio = null;
+      this.modalService.alert('No se pudo reproducir la vista previa.', 'Aviso', 'info');
+    });
   }
 
   openDedicationModal(text: string, event: Event) {
