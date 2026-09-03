@@ -3,7 +3,7 @@
 -- Ejecutar en Supabase SQL Editor
 -- ============================================
 
--- Funcion para votar personas
+-- Funcion para votar personas (sin toggle, solo permite 1 voto o cambiar de voto)
 CREATE OR REPLACE FUNCTION public.vote_person(
   p_person_id UUID,
   p_type TEXT,
@@ -24,19 +24,11 @@ BEGIN
     AND author_fingerprint = p_fingerprint;
 
   IF existing_vote IS NOT NULL THEN
-    -- User already voted, check if same type
     IF existing_vote.content_snapshot = p_type THEN
-      -- Same vote type - remove vote (unvote)
-      DELETE FROM buitres_interactions
-      WHERE id = existing_vote.id;
-
-      IF p_type = 'like' THEN
-        UPDATE buitres_people SET likes_count = GREATEST(0, likes_count - 1) WHERE id = p_person_id;
-      ELSE
-        UPDATE buitres_people SET dislikes_count = GREATEST(0, dislikes_count - 1) WHERE id = p_person_id;
-      END IF;
+      -- Same vote type - reject (ya votaste)
+      RAISE EXCEPTION 'Ya has votado por esta persona';
     ELSE
-      -- Different vote type - switch vote
+      -- Different vote type - allow switch
       UPDATE buitres_interactions
       SET content_snapshot = p_type
       WHERE id = existing_vote.id;
@@ -59,13 +51,14 @@ BEGIN
     END IF;
   END IF;
 
-  -- Return updated counts
+  -- Return updated counts + current vote
   SELECT likes_count, dislikes_count INTO person_record
   FROM buitres_people WHERE id = p_person_id;
 
   RETURN json_build_object(
     'likes_count', person_record.likes_count,
-    'dislikes_count', person_record.dislikes_count
+    'dislikes_count', person_record.dislikes_count,
+    'user_vote', p_type
   );
 END;
 $$;

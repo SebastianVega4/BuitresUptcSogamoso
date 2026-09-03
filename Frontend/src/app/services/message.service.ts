@@ -12,6 +12,7 @@ import {
 export interface Conversation {
   id: string;
   other_user: string;
+  initiator_email: string;
   last_message: string;
   last_message_at: string;
   last_message_by: string;

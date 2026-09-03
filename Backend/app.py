@@ -824,9 +824,6 @@ def get_buitres_people():
             people.sort(key=lambda x: get_sort_value(x, 'tags_count'), reverse=True)
         elif sort_by == 'notes':
             people.sort(key=lambda x: get_sort_value(x, 'notes_count'), reverse=True)
-        if role != 'admin':
-            for person in people:
-                person['email'] = None
         return jsonify(people), 200
     except Exception as e:
         print(f"Error general obteniendo buitres: {e}")
@@ -856,8 +853,19 @@ def get_buitre_by_id(person_id):
         person = result.data
         user_email = get_current_user_email()
         is_owner = user_email and person.get('email') and user_email.lower() == person['email'].strip().lower()
-        if role != 'admin' and not is_owner:
+        if not user_email:
             person['email'] = None
+        fingerprint = get_user_fingerprint()
+        try:
+            vote = supabase.table('buitres_interactions')\
+                .select('content_snapshot')\
+                .eq('target_id', person_id)\
+                .eq('target_type', 'vote')\
+                .eq('author_fingerprint', fingerprint)\
+                .execute()
+            person['user_vote'] = vote.data[0]['content_snapshot'] if vote.data else None
+        except:
+            person['user_vote'] = None
         return jsonify(person), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -937,7 +945,8 @@ def get_buitre_details(person_id):
             .execute()
         return jsonify(result.data), 200
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(f"Error getting details: {e}")
+        return jsonify([]), 200
 
 def update_buitre_activity(person_id):
     try:
@@ -1101,7 +1110,8 @@ def get_buitre_comments(person_id):
             .execute()
         return jsonify(result.data), 200
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(f"Error getting comments: {e}")
+        return jsonify([]), 200
 
 @app.route('/api/buitres/people/<person_id>/comments', methods=['POST'])
 def add_buitre_comment(person_id):
@@ -1219,12 +1229,49 @@ def vote_buitre(person_id):
         data = request.get_json()
         vote_type = data['type']
         fingerprint = data.get('fingerprint', get_user_fingerprint())
-        result = supabase.rpc('vote_person', {
-            'p_person_id': person_id,
-            'p_type': vote_type,
-            'p_fingerprint': fingerprint
-        }).execute()
-        return jsonify(result.data), 200
+        existing = supabase.table('buitres_interactions')\
+            .select('id, content_snapshot')\
+            .eq('target_id', person_id)\
+            .eq('target_type', 'vote')\
+            .eq('author_fingerprint', fingerprint)\
+            .execute()
+        if existing.data:
+            existing_type = existing.data[0]['content_snapshot']
+            if existing_type == vote_type:
+                return jsonify({"error": "Ya has votado por esta persona."}), 400
+            supabase.table('buitres_interactions')\
+                .update({'content_snapshot': vote_type})\
+                .eq('id', existing.data[0]['id']).execute()
+            person = supabase.table('buitres_people').select('likes_count, dislikes_count').eq('id', person_id).single().execute().data
+            likes = person['likes_count']
+            dislikes = person['dislikes_count']
+            if vote_type == 'like':
+                likes += 1
+                dislikes = max(0, dislikes - 1)
+            else:
+                dislikes += 1
+                likes = max(0, likes - 1)
+            supabase.table('buitres_people').update({
+                'likes_count': likes, 'dislikes_count': dislikes
+            }).eq('id', person_id).execute()
+        else:
+            supabase.table('buitres_interactions').insert({
+                'target_id': person_id,
+                'target_type': 'vote',
+                'author_fingerprint': fingerprint,
+                'content_snapshot': vote_type
+            }).execute()
+            person = supabase.table('buitres_people').select('likes_count, dislikes_count').eq('id', person_id).single().execute().data
+            likes = person['likes_count'] + (1 if vote_type == 'like' else 0)
+            dislikes = person['dislikes_count'] + (1 if vote_type == 'dislike' else 0)
+            supabase.table('buitres_people').update({
+                'likes_count': likes, 'dislikes_count': dislikes
+            }).eq('id', person_id).execute()
+        return jsonify({
+            'likes_count': likes,
+            'dislikes_count': dislikes,
+            'user_vote': vote_type
+        }), 200
     except Exception as e:
         if "23505" in str(e):
             return jsonify({"error": "Ya has votado por esta persona."}), 400
@@ -1512,9 +1559,17 @@ def get_conversations():
                 .eq('sender_email', other)\
                 .eq('is_read', False)\
                 .execute()
+            first_msg = supabase.table('private_messages')\
+                .select('sender_email')\
+                .eq('conversation_id', conv['id'])\
+                .order('created_at', desc=False)\
+                .limit(1)\
+                .execute()
+            initiator = first_msg.data[0]['sender_email'] if first_msg.data else None
             conversations.append({
                 'id': conv['id'],
                 'other_user': other,
+                'initiator_email': initiator,
                 'last_message': conv.get('last_message', ''),
                 'last_message_at': conv.get('last_message_at'),
                 'last_message_by': conv.get('last_message_by'),

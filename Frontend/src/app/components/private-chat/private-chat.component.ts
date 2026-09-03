@@ -150,12 +150,6 @@ export class PrivateChatComponent implements OnInit, OnDestroy {
     this.messageService.setActiveConversation(conversationId);
     this.loadMessages(conversationId);
     this.subscribeToConversation(conversationId);
-
-    const conv = this.conversations.find(c => c.id === conversationId);
-    if (conv && conv.unread_count > 0) {
-      conv.unread_count = 0;
-      this.messageService.refreshUnreadCount();
-    }
   }
 
   loadMessages(conversationId: string) {
@@ -163,6 +157,7 @@ export class PrivateChatComponent implements OnInit, OnDestroy {
       next: (data) => {
         this.messages = data;
         setTimeout(() => this.scrollToBottom(), 50);
+        this.messageService.refreshUnreadCount();
       },
       error: () => this.messages = []
     });
@@ -216,8 +211,10 @@ export class PrivateChatComponent implements OnInit, OnDestroy {
   }
 
   getConversationLabel(conv: Conversation): string {
-    if (conv.other_user === this.currentEmail) return 'Desconocido';
-    return conv.other_user;
+    if (conv.initiator_email === this.currentEmail) {
+      return conv.other_user;
+    }
+    return 'Anónimo';
   }
 
   getSenderLabel(msg: Message): string {

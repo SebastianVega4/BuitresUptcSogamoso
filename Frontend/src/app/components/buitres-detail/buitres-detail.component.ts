@@ -410,6 +410,7 @@ export class BuitresDetailComponent implements OnInit, OnDestroy {
   loadData(id: string) {
     this.buitresService.getPersonById(id).subscribe(p => {
         this.person = p;
+        this.userVote = (p as any)?.user_vote || null;
         this.checkOwnership();
     });
     this.loadDetails(id);
@@ -467,7 +468,7 @@ export class BuitresDetailComponent implements OnInit, OnDestroy {
         next: (res) => {
           if (res?.likes_count !== undefined) this.person!.likes_count = res.likes_count;
           if (res?.dislikes_count !== undefined) this.person!.dislikes_count = res.dislikes_count;
-          this.userVote = type;
+          if (res?.user_vote !== undefined) this.userVote = res.user_vote;
           this.voting = false;
         },
         error: (err) => {
