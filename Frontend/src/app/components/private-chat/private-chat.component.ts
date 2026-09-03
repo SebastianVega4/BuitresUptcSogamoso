@@ -1,14 +1,16 @@
 import { Component, OnInit, OnDestroy, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { MessageService, Conversation, Message } from '../../services/message.service';
 import { AuthService } from '../../services/auth';
+import { BuitresService, BuitrePerson } from '../../services/buitres.service';
 import {
   SupabaseRealtimeService,
   RealtimeMessage
 } from '../../services/supabase-realtime.service';
 import { RealtimeChannel } from '@supabase/supabase-js';
-import { Subscription } from 'rxjs';
+import { Subscription, Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 
 @Component({
   selector: 'app-private-chat',
@@ -25,27 +27,58 @@ export class PrivateChatComponent implements OnInit, OnDestroy {
   conversations: Conversation[] = [];
   messages: Message[] = [];
   newMessage = '';
-  targetEmail = '';
-  isCreatingConversation = false;
   currentEmail = '';
+  currentUserName = '';
+
+  searchQuery = '';
+  searchResults: BuitrePerson[] = [];
+  isSearching = false;
+  showSearchResults = false;
 
   private unreadSub?: Subscription;
   private msgChannel?: RealtimeChannel;
-  private convChannel?: RealtimeChannel;
+  private searchSubject = new Subject<string>();
 
   constructor(
     private messageService: MessageService,
     private realtime: SupabaseRealtimeService,
-    public authService: AuthService
+    private buitresService: BuitresService,
+    public authService: AuthService,
+    private router: Router
   ) {}
 
   ngOnInit() {
-    const user = localStorage.getItem('buitresUser') || localStorage.getItem('adminUser');
-    if (user) {
-      try { this.currentEmail = JSON.parse(user).email || ''; } catch (e) {}
+    const userData = localStorage.getItem('buitresUser') || localStorage.getItem('adminUser');
+    if (userData) {
+      try {
+        const user = JSON.parse(userData);
+        this.currentEmail = user.email || '';
+        this.currentUserName = user.name || user.email || '';
+      } catch (e) {}
     }
 
-    this.unreadSub = this.messageService.unreadCount$.subscribe(count => {});
+    this.unreadSub = this.messageService.unreadCount$.subscribe(() => {});
+
+    this.searchSubject.pipe(
+      debounceTime(300),
+      distinctUntilChanged()
+    ).subscribe(query => {
+      if (!query.trim()) {
+        this.searchResults = [];
+        this.isSearching = false;
+        return;
+      }
+      this.buitresService.getPeople(query, 'recent').subscribe({
+        next: (results) => {
+          this.searchResults = results.filter(p => p.email && p.email !== this.currentEmail);
+          this.isSearching = false;
+        },
+        error: () => {
+          this.searchResults = [];
+          this.isSearching = false;
+        }
+      });
+    });
 
     if (this.isLoggedIn) {
       this.messageService.startRealtimeSubscriptions();
@@ -56,7 +89,6 @@ export class PrivateChatComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.unreadSub?.unsubscribe();
     if (this.msgChannel) this.realtime.unsubscribe(this.msgChannel);
-    if (this.convChannel) this.realtime.unsubscribe(this.convChannel);
   }
 
   get isLoggedIn(): boolean {
@@ -75,6 +107,33 @@ export class PrivateChatComponent implements OnInit, OnDestroy {
     } else {
       this.messageService.setActiveConversation(null);
     }
+  }
+
+  onSearchInput() {
+    this.showSearchResults = true;
+    this.isSearching = true;
+    this.searchSubject.next(this.searchQuery);
+  }
+
+  selectSearchResult(person: BuitrePerson) {
+    if (!person.email) return;
+    this.showSearchResults = false;
+    this.searchQuery = person.name;
+    this.isSearching = false;
+    this.messageService.getOrCreateConversation(person.email).subscribe({
+      next: (res) => {
+        this.openConversation(res.conversation_id);
+        this.loadConversations();
+        this.searchQuery = '';
+        this.searchResults = [];
+      }
+    });
+  }
+
+  hideSearchResults() {
+    setTimeout(() => {
+      this.showSearchResults = false;
+    }, 200);
   }
 
   loadConversations() {
@@ -144,22 +203,6 @@ export class PrivateChatComponent implements OnInit, OnDestroy {
     });
   }
 
-  startNewConversation() {
-    if (!this.targetEmail.trim()) return;
-    this.isCreatingConversation = true;
-    this.messageService.getOrCreateConversation(this.targetEmail.trim()).subscribe({
-      next: (res) => {
-        this.isCreatingConversation = false;
-        this.targetEmail = '';
-        this.openConversation(res.conversation_id);
-        this.loadConversations();
-      },
-      error: () => {
-        this.isCreatingConversation = false;
-      }
-    });
-  }
-
   goBack() {
     this.activeConversation = null;
     this.messages = [];
@@ -171,23 +214,33 @@ export class PrivateChatComponent implements OnInit, OnDestroy {
     this.loadConversations();
   }
 
-  getOtherEmail(conv: Conversation): string {
+  getConversationLabel(conv: Conversation): string {
+    if (conv.other_user === this.currentEmail) return 'Desconocido';
     return conv.other_user;
   }
 
-  getAnonymousLabel(email: string): string {
-    if (email === this.currentEmail) return 'Tú';
-    let hash = 0;
-    for (let i = 0; i < email.length; i++) {
-      const char = email.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash |= 0;
+  getSenderLabel(msg: Message): string {
+    if (msg.sender_email === this.currentEmail) return 'Tú';
+    const initiatorEmail = this.getInitiatorEmail();
+    if (this.currentEmail === initiatorEmail) {
+      return msg.sender_email;
     }
-    return 'Anónimo #' + Math.abs(hash).toString(16).slice(0, 6).toUpperCase();
+    return 'Anónimo';
+  }
+
+  private getInitiatorEmail(): string {
+    if (this.messages.length === 0) return '';
+    const firstMsg = this.messages[0];
+    return firstMsg.sender_email;
   }
 
   isMyMessage(msg: Message): boolean {
     return msg.sender_email === this.currentEmail;
+  }
+
+  goToProfile(email: string) {
+    if (!email) return;
+    this.router.navigate(['/buitres']);
   }
 
   formatDate(dateStr: string): string {

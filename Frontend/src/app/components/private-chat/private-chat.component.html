@@ -21,20 +21,36 @@
 
   <!-- Conversations List -->
   <div class="chat-body" *ngIf="!activeConversation">
-    <!-- New conversation input -->
-    <div class="new-conversation">
-      <input
-        type="email"
-        [(ngModel)]="targetEmail"
-        placeholder="Email @uptc.edu.co..."
-        (keyup.enter)="startNewConversation()"
-      />
-      <button
-        (click)="startNewConversation()"
-        [disabled]="isCreatingConversation || !targetEmail.trim()"
-      >
-        <i class="fas fa-paper-plane"></i>
-      </button>
+    <!-- Search bar -->
+    <div class="chat-search">
+      <div class="search-input-wrapper">
+        <i class="fas fa-search search-icon"></i>
+        <input
+          type="text"
+          [(ngModel)]="searchQuery"
+          (input)="onSearchInput()"
+          (blur)="hideSearchResults()"
+          placeholder="Buscar persona para chatear..."
+          class="search-input"
+        />
+      </div>
+      <!-- Search results dropdown -->
+      <div class="search-results-dropdown" *ngIf="showSearchResults && searchResults.length > 0">
+        <div
+          class="search-result-item"
+          *ngFor="let person of searchResults"
+          (mousedown)="selectSearchResult(person)"
+        >
+          <div class="result-avatar" [class]="person.gender">
+            <img *ngIf="person.image_url" [src]="person.image_url" alt="">
+            <i *ngIf="!person.image_url" class="fas fa-user"></i>
+          </div>
+          <div class="result-info">
+            <span class="result-name">{{ person.name }}</span>
+            <span class="result-email">{{ person.email }}</span>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Conversation list -->
@@ -45,10 +61,10 @@
         (click)="openConversation(conv.id)"
       >
         <div class="conv-avatar">
-          <i class="fas fa-user"></i>
+          <i class="fas fa-user-secret"></i>
         </div>
         <div class="conv-info">
-          <span class="conv-email">{{ getAnonymousLabel(getOtherEmail(conv)) }}</span>
+          <span class="conv-email">{{ getConversationLabel(conv) }}</span>
           <span class="conv-preview">{{ conv.last_message }}</span>
         </div>
         <div class="conv-meta">
@@ -58,9 +74,10 @@
           </span>
         </div>
       </div>
-      <div class="empty-state" *ngIf="conversations.length === 0">
+      <div class="empty-state" *ngIf="conversations.length === 0 && !showSearchResults">
         <i class="fas fa-inbox"></i>
         <p>No hay conversaciones</p>
+        <p class="empty-hint">Busca una persona para iniciar un chat</p>
       </div>
     </div>
   </div>
@@ -74,7 +91,7 @@
         [class.my-message]="isMyMessage(msg)"
       >
         <span class="message-sender" *ngIf="!isMyMessage(msg)">
-          {{ getAnonymousLabel(msg.sender_email) }}
+          {{ getSenderLabel(msg) }}
         </span>
         <div class="message-bubble">
           {{ msg.content }}
