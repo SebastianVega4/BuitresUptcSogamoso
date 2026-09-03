@@ -8,7 +8,6 @@ import {
   RealtimeMessage,
   RealtimeConversation
 } from './supabase-realtime.service';
-import { getSupabase } from './supabase-realtime.service';
 
 export interface Conversation {
   id: string;

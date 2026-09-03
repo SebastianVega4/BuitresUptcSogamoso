@@ -1,17 +1,6 @@
+import { Injectable } from '@angular/core';
 import { createClient, SupabaseClient, RealtimeChannel } from '@supabase/supabase-js';
-import { environment } from '../environments/environment';
-
-let supabaseInstance: SupabaseClient | null = null;
-
-export function getSupabase(): SupabaseClient {
-  if (!supabaseInstance) {
-    supabaseInstance = createClient(
-      environment.supabaseUrl,
-      environment.supabaseKey
-    );
-  }
-  return supabaseInstance;
-}
+import { environment } from '../../environments/environment';
 
 export interface RealtimeMessage {
   id: string;
@@ -32,16 +21,24 @@ export interface RealtimeConversation {
   last_message_by: string;
 }
 
+@Injectable({ providedIn: 'root' })
 export class SupabaseRealtimeService {
+  private supabase: SupabaseClient;
   private channels: RealtimeChannel[] = [];
+
+  constructor() {
+    this.supabase = createClient(
+      environment.supabaseUrl,
+      environment.supabaseKey
+    );
+  }
 
   subscribeToMessages(
     conversationId: string,
     onInsert: (msg: RealtimeMessage) => void,
     onUpdate?: (msg: RealtimeMessage) => void
   ): RealtimeChannel {
-    const supabase = getSupabase();
-    const channel = supabase
+    const channel = this.supabase
       .channel(`messages:${conversationId}`)
       .on(
         'postgres_changes',
@@ -78,8 +75,7 @@ export class SupabaseRealtimeService {
     onInsert: (conv: RealtimeConversation) => void,
     onUpdate: (conv: RealtimeConversation) => void
   ): RealtimeChannel {
-    const supabase = getSupabase();
-    const channel = supabase
+    const channel = this.supabase
       .channel('conversations')
       .on(
         'postgres_changes',
@@ -106,8 +102,7 @@ export class SupabaseRealtimeService {
     userEmail: string,
     onNewMessage: (msg: RealtimeMessage) => void
   ): RealtimeChannel {
-    const supabase = getSupabase();
-    const channel = supabase
+    const channel = this.supabase
       .channel(`unread:${userEmail}`)
       .on(
         'postgres_changes',
@@ -131,17 +126,13 @@ export class SupabaseRealtimeService {
 
   unsubscribeAll(): void {
     this.channels.forEach(ch => {
-      const supabase = getSupabase();
-      supabase.removeChannel(ch);
+      this.supabase.removeChannel(ch);
     });
     this.channels = [];
   }
 
   unsubscribe(channel: RealtimeChannel): void {
-    const supabase = getSupabase();
-    supabase.removeChannel(channel);
+    this.supabase.removeChannel(channel);
     this.channels = this.channels.filter(c => c !== channel);
   }
 }
-
-export const realtimeService = new SupabaseRealtimeService();
