@@ -116,11 +116,12 @@ export class PrivateChatComponent implements OnInit, OnDestroy {
   }
 
   selectSearchResult(person: BuitrePerson) {
-    if (!person.email) return;
+    const email = person.email;
+    if (!email) return;
     this.showSearchResults = false;
-    this.searchQuery = person.name;
+    this.searchQuery = '';
     this.isSearching = false;
-    this.messageService.getOrCreateConversation(person.email).subscribe({
+    this.messageService.getOrCreateConversation(email).subscribe({
       next: (res) => {
         this.openConversation(res.conversation_id);
         this.loadConversations();

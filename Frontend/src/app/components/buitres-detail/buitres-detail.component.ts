@@ -29,6 +29,7 @@ export class BuitresDetailComponent implements OnInit, OnDestroy {
   fingerprint: string = '';
   isAdmin: boolean = false;
   isOwner: boolean = false;
+  userVote: 'like' | 'dislike' | null = null;
 
   // Song Notes State
   showSongModal: boolean = false;
@@ -455,17 +456,26 @@ export class BuitresDetailComponent implements OnInit, OnDestroy {
 
   vote(type: 'like' | 'dislike') {
     if (!this.person || this.voting) return;
-    this.voting = true;
-    this.buitresService.votePerson(this.person.id, type, this.fingerprint).subscribe({
-      next: () => {
-        this.loadData(this.person!.id);
-        this.voting = false;
-      },
-      error: (err) => {
-        const errorMsg = err.error?.error || 'Ya has votado por esta persona.';
-        this.modalService.alert(errorMsg, 'Atención', 'warning');
-        this.voting = false;
-      }
+    const label = type === 'like' ? 'Me gusta' : 'No me gusta';
+    this.modalService.confirm(
+      `¿Deseas dar "${label}" al perfil de ${this.person.name}?`,
+      'Confirmar voto'
+    ).subscribe(confirmed => {
+      if (!confirmed) return;
+      this.voting = true;
+      this.buitresService.votePerson(this.person!.id, type, this.fingerprint).subscribe({
+        next: (res) => {
+          if (res?.likes_count !== undefined) this.person!.likes_count = res.likes_count;
+          if (res?.dislikes_count !== undefined) this.person!.dislikes_count = res.dislikes_count;
+          this.userVote = type;
+          this.voting = false;
+        },
+        error: (err) => {
+          const errorMsg = err.error?.error || 'Ya has votado por esta persona.';
+          this.modalService.alert(errorMsg, 'Atención', 'warning');
+          this.voting = false;
+        }
+      });
     });
   }
 
