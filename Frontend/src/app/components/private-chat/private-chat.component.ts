@@ -175,6 +175,17 @@ export class PrivateChatComponent implements OnInit, OnDestroy {
     return conv.other_user;
   }
 
+  getAnonymousLabel(email: string): string {
+    if (email === this.currentEmail) return 'Tú';
+    let hash = 0;
+    for (let i = 0; i < email.length; i++) {
+      const char = email.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash |= 0;
+    }
+    return 'Anónimo #' + Math.abs(hash).toString(16).slice(0, 6).toUpperCase();
+  }
+
   isMyMessage(msg: Message): boolean {
     return msg.sender_email === this.currentEmail;
   }

@@ -49,11 +49,6 @@
                         (click)="requestRemoval()">
                         <i class="fas fa-user-slash me-1"></i> Quiero eliminar mi perfil
                     </button>
-                    <button class="btn btn-outline-primary btn-sm text-decoration-none"
-                        *ngIf="authService.isBuitresLoggedIn() && !isOwner && person?.email"
-                        (click)="openChat()">
-                        <i class="fas fa-comment me-1"></i> Enviar mensaje
-                    </button>
                 </div>
             </div>
         </div>
