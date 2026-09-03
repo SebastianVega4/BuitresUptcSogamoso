@@ -3,7 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MessageService, Conversation, Message } from '../../services/message.service';
 import { AuthService } from '../../services/auth';
-import { Subscription, interval } from 'rxjs';
+import {
+  SupabaseRealtimeService,
+  RealtimeMessage
+} from '../../services/supabase-realtime.service';
+import { RealtimeChannel } from '@supabase/supabase-js';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-private-chat',
@@ -22,52 +27,53 @@ export class PrivateChatComponent implements OnInit, OnDestroy {
   newMessage = '';
   targetEmail = '';
   isCreatingConversation = false;
-  private refreshSub?: Subscription;
   currentEmail = '';
+
+  private unreadSub?: Subscription;
+  private msgChannel?: RealtimeChannel;
+  private convChannel?: RealtimeChannel;
 
   constructor(
     private messageService: MessageService,
+    private realtime: SupabaseRealtimeService,
     public authService: AuthService
   ) {}
 
   ngOnInit() {
-    const user = this.authService.getBuitresUser();
-    this.currentEmail = user?.email || '';
-    this.loadConversations();
-    this.refreshSub = interval(5000).subscribe(() => {
-      if (this.isOpen) {
-        this.loadConversations();
-        if (this.activeConversation) {
-          this.loadMessages(this.activeConversation);
-        }
-      }
-    });
-    window.addEventListener('open-private-chat', this.handleOpenChat.bind(this));
+    const user = localStorage.getItem('buitresUser') || localStorage.getItem('adminUser');
+    if (user) {
+      try { this.currentEmail = JSON.parse(user).email || ''; } catch (e) {}
+    }
+
+    this.unreadSub = this.messageService.unreadCount$.subscribe(count => {});
+
+    if (this.isLoggedIn) {
+      this.messageService.startRealtimeSubscriptions();
+      this.loadConversations();
+    }
   }
 
   ngOnDestroy() {
-    this.refreshSub?.unsubscribe();
-    window.removeEventListener('open-private-chat', this.handleOpenChat.bind(this));
-  }
-
-  private handleOpenChat(event: Event) {
-    const customEvent = event as CustomEvent;
-    const conversationId = customEvent.detail?.conversationId;
-    if (conversationId) {
-      this.isOpen = true;
-      this.loadConversations();
-      this.openConversation(conversationId);
-    }
+    this.unreadSub?.unsubscribe();
+    if (this.msgChannel) this.realtime.unsubscribe(this.msgChannel);
+    if (this.convChannel) this.realtime.unsubscribe(this.convChannel);
   }
 
   get isLoggedIn(): boolean {
     return this.authService.isBuitresLoggedIn();
   }
 
+  get unreadCount(): number {
+    return this.messageService['unreadCountSubject'].value;
+  }
+
   toggleChat() {
     this.isOpen = !this.isOpen;
     if (this.isOpen) {
       this.loadConversations();
+      this.messageService.setActiveConversation(null);
+    } else {
+      this.messageService.setActiveConversation(null);
     }
   }
 
@@ -81,7 +87,15 @@ export class PrivateChatComponent implements OnInit, OnDestroy {
 
   openConversation(conversationId: string) {
     this.activeConversation = conversationId;
+    this.messageService.setActiveConversation(conversationId);
     this.loadMessages(conversationId);
+    this.subscribeToConversation(conversationId);
+
+    const conv = this.conversations.find(c => c.id === conversationId);
+    if (conv && conv.unread_count > 0) {
+      conv.unread_count = 0;
+      this.messageService.refreshUnreadCount();
+    }
   }
 
   loadMessages(conversationId: string) {
@@ -94,15 +108,37 @@ export class PrivateChatComponent implements OnInit, OnDestroy {
     });
   }
 
+  subscribeToConversation(conversationId: string) {
+    if (this.msgChannel) this.realtime.unsubscribe(this.msgChannel);
+
+    this.msgChannel = this.realtime.subscribeToMessages(
+      conversationId,
+      (msg: RealtimeMessage) => {
+        if (this.activeConversation === conversationId) {
+          const exists = this.messages.find(m => m.id === msg.id);
+          if (!exists) {
+            this.messages.push(msg as Message);
+            setTimeout(() => this.scrollToBottom(), 50);
+          }
+        }
+      },
+      (msg: RealtimeMessage) => {
+        const idx = this.messages.findIndex(m => m.id === msg.id);
+        if (idx >= 0) {
+          this.messages[idx] = msg as Message;
+        }
+      }
+    );
+  }
+
   sendMessage() {
     if (!this.newMessage.trim() || !this.activeConversation) return;
     const conv = this.conversations.find(c => c.id === this.activeConversation);
     if (!conv) return;
+
     this.messageService.sendMessage(conv.other_user, this.newMessage.trim()).subscribe({
       next: () => {
         this.newMessage = '';
-        this.loadMessages(this.activeConversation!);
-        this.loadConversations();
       },
       error: (err) => console.error('Error sending message:', err)
     });
@@ -127,6 +163,12 @@ export class PrivateChatComponent implements OnInit, OnDestroy {
   goBack() {
     this.activeConversation = null;
     this.messages = [];
+    this.messageService.setActiveConversation(null);
+    if (this.msgChannel) {
+      this.realtime.unsubscribe(this.msgChannel);
+      this.msgChannel = undefined;
+    }
+    this.loadConversations();
   }
 
   getOtherEmail(conv: Conversation): string {

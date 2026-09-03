@@ -1,7 +1,14 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, BehaviorSubject } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
+import {
+  SupabaseRealtimeService,
+  RealtimeMessage,
+  RealtimeConversation
+} from './supabase-realtime.service';
+import { getSupabase } from './supabase-realtime.service';
 
 export interface Conversation {
   id: string;
@@ -27,7 +34,28 @@ export interface Message {
 export class MessageService {
   private apiUrl = environment.apiUrl;
 
-  constructor(private http: HttpClient) {}
+  private unreadCountSubject = new BehaviorSubject<number>(0);
+  public unreadCount$ = this.unreadCountSubject.asObservable();
+
+  private activeConversationId: string | null = null;
+  private currentEmail: string = '';
+
+  constructor(
+    private http: HttpClient,
+    private realtime: SupabaseRealtimeService
+  ) {
+    this.loadUserEmail();
+  }
+
+  private loadUserEmail() {
+    const userData = localStorage.getItem('buitresUser') || localStorage.getItem('adminUser');
+    if (userData) {
+      try {
+        const user = JSON.parse(userData);
+        this.currentEmail = user.email || '';
+      } catch (e) {}
+    }
+  }
 
   private getHeaders(): { [key: string]: string } {
     const token = localStorage.getItem('buitresToken') || localStorage.getItem('adminToken');
@@ -63,5 +91,35 @@ export class MessageService {
     return this.http.get<{ unread: number }>(`${this.apiUrl}/api/messages/unread`, {
       headers: this.getHeaders()
     });
+  }
+
+  refreshUnreadCount() {
+    if (!this.currentEmail) this.loadUserEmail();
+    if (!this.currentEmail) return;
+    this.getUnreadCount().subscribe({
+      next: (res) => this.unreadCountSubject.next(res.unread),
+      error: () => {}
+    });
+  }
+
+  setActiveConversation(conversationId: string | null) {
+    this.activeConversationId = conversationId;
+  }
+
+  startRealtimeSubscriptions() {
+    if (!this.currentEmail) this.loadUserEmail();
+    if (!this.currentEmail) return;
+
+    this.realtime.subscribeToUnreadMessages(this.currentEmail, (msg) => {
+      if (msg.conversation_id !== this.activeConversationId) {
+        this.unreadCountSubject.next(this.unreadCountSubject.value + 1);
+      }
+    });
+
+    this.refreshUnreadCount();
+  }
+
+  stopRealtimeSubscriptions() {
+    this.realtime.unsubscribeAll();
   }
 }

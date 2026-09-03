@@ -25,6 +25,8 @@ allowed_origins = [
     "http://localhost:4200",
     "https://buitres-uptc-sogamoso.vercel.app",
     "https://sebastianvega4.github.io",
+    "https://buitresuptc.site",
+    "https://www.buitresuptc.site",
 ]
 
 CORS(app, origins=allowed_origins, supports_credentials=True)
