@@ -113,11 +113,7 @@ export class BuitresComponent implements OnInit, AfterViewInit, OnDestroy {
     this.loading = true;
     this.authService.googleLogin(idToken).subscribe({
       next: () => {
-        this.isLoggedIn = true;
-        this.isAdmin = this.authService.isRoleAdmin();
-        this.loadPeople();
-        this.loadTotalCount();
-        this.loading = false;
+        window.location.reload();
       },
       error: (err) => {
         this.loginError = err.error?.error || 'Error al iniciar sesión';

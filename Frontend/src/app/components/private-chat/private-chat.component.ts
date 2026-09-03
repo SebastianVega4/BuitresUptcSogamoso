@@ -38,6 +38,7 @@ export class PrivateChatComponent implements OnInit, OnDestroy {
   private unreadSub?: Subscription;
   private msgChannel?: RealtimeChannel;
   private searchSubject = new Subject<string>();
+  private openChatHandler?: (e: Event) => void;
 
   constructor(
     private messageService: MessageService,
@@ -84,11 +85,22 @@ export class PrivateChatComponent implements OnInit, OnDestroy {
       this.messageService.startRealtimeSubscriptions();
       this.loadConversations();
     }
+
+    this.openChatHandler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.conversationId) {
+        this.isOpen = true;
+        this.loadConversations();
+        setTimeout(() => this.openConversation(detail.conversationId), 300);
+      }
+    };
+    window.addEventListener('open-private-chat', this.openChatHandler);
   }
 
   ngOnDestroy() {
     this.unreadSub?.unsubscribe();
     if (this.msgChannel) this.realtime.unsubscribe(this.msgChannel);
+    if (this.openChatHandler) window.removeEventListener('open-private-chat', this.openChatHandler);
   }
 
   get isLoggedIn(): boolean {
