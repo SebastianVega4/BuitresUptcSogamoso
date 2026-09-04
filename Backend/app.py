@@ -1489,38 +1489,48 @@ def send_message():
         return jsonify({"error": "Debes iniciar sesión para enviar mensajes"}), 401
     try:
         data = request.get_json()
+        conversation_id = data.get('conversation_id')
         recipient_id = data.get('recipient_id')
         content = data.get('content', '').strip()
-        if not recipient_id or not content:
-            return jsonify({"error": "Faltan campos requeridos"}), 400
+        if not content:
+            return jsonify({"error": "El mensaje no puede estar vacío"}), 400
         sender_email = get_current_user_email()
         if not sender_email:
             return jsonify({"error": "No se pudo identificar al remitente"}), 400
-        if sender_email == recipient_id:
-            return jsonify({"error": "No puedes enviarte mensajes a ti mismo"}), 400
-        conv_key = '_'.join(sorted([sender_email, recipient_id]))
-        existing = supabase.table('private_conversations')\
-            .select('id')\
-            .eq('conversation_key', conv_key)\
-            .execute()
-        if existing.data:
-            conv_id = existing.data[0]['id']
+        if conversation_id:
+            conv_check = supabase.table('private_conversations')\
+                .select('id, participant_1, participant_2')\
+                .eq('id', conversation_id)\
+                .execute()
+            if not conv_check.data:
+                return jsonify({"error": "Conversación no encontrada"}), 404
+            conv = conv_check.data[0]
+            if sender_email not in (conv['participant_1'], conv['participant_2']):
+                return jsonify({"error": "No tienes acceso a esta conversación"}), 403
+            conv_id = conversation_id
         else:
-            conv_result = supabase.table('private_conversations').insert({
-                'participant_1': sorted([sender_email, recipient_id])[0],
-                'participant_2': sorted([sender_email, recipient_id])[1],
-                'conversation_key': conv_key
-            }).execute()
-            conv_id = conv_result.data[0]['id']
-            supabase.table('private_conversations').update({
-                'last_message': content,
-                'last_message_at': datetime.now(timezone.utc).isoformat(),
-                'last_message_by': sender_email
-            }).eq('id', conv_id).execute()
+            if not recipient_id:
+                return jsonify({"error": "Faltan campos requeridos"}), 400
+            if sender_email == recipient_id:
+                return jsonify({"error": "No puedes enviarte mensajes a ti mismo"}), 400
+            conv_key = '_'.join(sorted([sender_email, recipient_id]))
+            existing = supabase.table('private_conversations')\
+                .select('id')\
+                .eq('conversation_key', conv_key)\
+                .execute()
+            if existing.data:
+                conv_id = existing.data[0]['id']
+            else:
+                conv_result = supabase.table('private_conversations').insert({
+                    'participant_1': sorted([sender_email, recipient_id])[0],
+                    'participant_2': sorted([sender_email, recipient_id])[1],
+                    'conversation_key': conv_key
+                }).execute()
+                conv_id = conv_result.data[0]['id']
         msg_result = supabase.table('private_messages').insert({
             'conversation_id': conv_id,
             'sender_email': sender_email,
-            'recipient_email': recipient_id,
+            'recipient_email': recipient_id or '',
             'content': content
         }).execute()
         supabase.table('private_conversations').update({
@@ -1650,13 +1660,24 @@ def get_or_create_conversation_with_user(target_email):
         return jsonify({"error": "No autorizado"}), 401
     try:
         user_email = get_current_user_email()
-        conv_key = '_'.join(sorted([user_email, target_email]))
+        if user_email == target_email:
+            return jsonify({"error": "No puedes enviarte mensajes a ti mismo"}), 400
         existing = supabase.table('private_conversations')\
-            .select('id')\
-            .eq('conversation_key', conv_key)\
+            .select('id, conversation_key')\
+            .or_(f'participant_1.eq.{user_email},participant_2.eq.{user_email}')\
             .execute()
-        if existing.data:
-            return jsonify({"conversation_id": existing.data[0]['id']}), 200
+        for conv in existing.data:
+            parts = conv['conversation_key'].split('_')
+            if target_email in parts and user_email in parts:
+                first_msg = supabase.table('private_messages')\
+                    .select('sender_email')\
+                    .eq('conversation_id', conv['id'])\
+                    .order('created_at', desc=False)\
+                    .limit(1)\
+                    .execute()
+                if first_msg.data and first_msg.data[0]['sender_email'] == user_email:
+                    return jsonify({"conversation_id": conv['id']}), 200
+        conv_key = f"{user_email}_{target_email}"
         conv_result = supabase.table('private_conversations').insert({
             'participant_1': sorted([user_email, target_email])[0],
             'participant_2': sorted([user_email, target_email])[1],
