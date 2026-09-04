@@ -8,6 +8,10 @@ dist/
 /.angular/
 .angular/
 
+#python
+__pycache__/
+/__pycache__/
+
 # Node modules and dependency files
 /node_modules/
 node_modules/

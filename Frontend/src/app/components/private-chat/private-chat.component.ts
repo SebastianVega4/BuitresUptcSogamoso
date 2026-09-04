@@ -200,10 +200,7 @@ export class PrivateChatComponent implements OnInit, OnDestroy {
 
   sendMessage() {
     if (!this.newMessage.trim() || !this.activeConversation) return;
-    const conv = this.conversations.find(c => c.id === this.activeConversation);
-    if (!conv) return;
-
-    this.messageService.sendMessage(conv.other_user, this.newMessage.trim()).subscribe({
+    this.messageService.sendMessage(this.activeConversation, this.newMessage.trim()).subscribe({
       next: () => {
         this.newMessage = '';
       },

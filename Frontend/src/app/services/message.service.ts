@@ -74,9 +74,9 @@ export class MessageService {
     });
   }
 
-  sendMessage(recipientId: string, content: string): Observable<any> {
+  sendMessage(conversationId: string, content: string): Observable<any> {
     return this.http.post(`${this.apiUrl}/api/messages/send`, {
-      recipient_id: recipientId,
+      conversation_id: conversationId,
       content
     }, { headers: this.getHeaders() });
   }
