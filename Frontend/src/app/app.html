@@ -18,6 +18,9 @@
         <a routerLink="/buitres" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="toggleMenu()">
           <i class="fas fa-user-friends me-1"></i>Buitres
         </a>
+        <a routerLink="/foro" routerLinkActive="active" (click)="toggleMenu()" *ngIf="isLoggedIn">
+          <i class="fas fa-comments me-1"></i>Foro
+        </a>
         <a routerLink="/about" routerLinkActive="active" (click)="toggleMenu()">
           <i class="fas fa-info-circle me-1"></i>About
         </a>

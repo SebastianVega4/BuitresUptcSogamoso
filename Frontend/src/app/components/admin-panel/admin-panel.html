@@ -23,6 +23,20 @@
     </button>
   </div>
 
+  <!-- Moderator Guide -->
+  <div class="moderator-guide" *ngIf="!isSuperAdmin">
+    <div class="guide-card">
+      <i class="fas fa-info-circle guide-icon"></i>
+      <div class="guide-text">
+        <h3>Bienvenido, Moderador</h3>
+        <p>Ya ingresaste al panel. Para gestionar perfiles, comentarios y contenido ofensivo, ve a la sección <strong>Buitres</strong> y abre el perfil que deseas moderar. Desde allí podrás eliminar comentarios, tags o fotos que violen las reglas.</p>
+        <a routerLink="/buitres" class="guide-btn">
+          <i class="fas fa-arrow-right me-1"></i>Ir a Buitres
+        </a>
+      </div>
+    </div>
+  </div>
+
   <div class="admin-content">
     <div class="admin-sidebar">
       <div class="sidebar-section">
@@ -41,6 +55,9 @@
         <button class="sidebar-btn" (click)="loadAllBuitres()">
           <i class="fas fa-sync-alt me-2"></i>Actualizar
         </button>
+        <a class="sidebar-btn" routerLink="/buitres">
+          <i class="fas fa-external-link-alt me-2"></i>Ir a Buitres
+        </a>
       </div>
     </div>
 
@@ -62,13 +79,20 @@
       <div class="section" *ngIf="activeSection === 'buitres'">
         <div class="section-header">
           <h2>Lista de Buitres</h2>
-          <button class="btn-refresh" (click)="loadAllBuitres()" [disabled]="isLoading">
-            <i class="fas fa-sync-alt" [class.fa-spin]="isLoading"></i>
-          </button>
+          <div class="section-actions">
+            <div class="search-box">
+              <i class="fas fa-search"></i>
+              <input type="text" [(ngModel)]="searchQuery" placeholder="Buscar buitre..."
+                (input)="filterBuitres()">
+            </div>
+            <button class="btn-refresh" (click)="loadAllBuitres()" [disabled]="isLoading">
+              <i class="fas fa-sync-alt" [class.fa-spin]="isLoading"></i>
+            </button>
+          </div>
         </div>
 
-        <div class="buitres-list" *ngIf="buitres.length > 0; else emptyList">
-          <div class="buitre-item" *ngFor="let buitre of buitres">
+        <div class="buitres-list" *ngIf="filteredBuitres.length > 0; else emptyList">
+          <div class="buitre-item" *ngFor="let buitre of filteredBuitres">
             <div class="buitre-info">
               <h4>{{ buitre.name }}</h4>
               <p>{{ buitre.description || 'Sin descripción' }}</p>
@@ -77,10 +101,10 @@
               </span>
             </div>
             <div class="buitre-actions">
-              <a [routerLink]="['/buitres/person', buitre.id]" class="btn-action btn-view">
+              <a [routerLink]="['/buitres/person', buitre.id]" class="btn-action btn-view" title="Ver perfil">
                 <i class="fas fa-eye"></i>
               </a>
-              <button class="btn-action btn-delete" *ngIf="isSuperAdmin" (click)="deleteBuitre(buitre.id, buitre.name)">
+              <button class="btn-action btn-delete" *ngIf="isSuperAdmin" (click)="deleteBuitre(buitre.id, buitre.name)" title="Eliminar">
                 <i class="fas fa-trash"></i>
               </button>
             </div>
@@ -90,7 +114,7 @@
         <ng-template #emptyList>
           <div class="empty-state">
             <i class="fas fa-users"></i>
-            <p>No hay buitres registrados</p>
+            <p>{{ searchQuery ? 'No se encontraron resultados' : 'No hay buitres registrados' }}</p>
           </div>
         </ng-template>
       </div>

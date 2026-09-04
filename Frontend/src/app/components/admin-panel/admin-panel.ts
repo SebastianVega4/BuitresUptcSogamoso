@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth';
 import { BuitresService } from '../../services/buitres.service';
 
@@ -9,11 +10,13 @@ import { BuitresService } from '../../services/buitres.service';
   templateUrl: './admin-panel.html',
   styleUrls: ['./admin-panel.scss'],
   standalone: true,
-  imports: [CommonModule, RouterLink]
+  imports: [CommonModule, RouterLink, FormsModule]
 })
 export class AdminPanelComponent implements OnInit {
   activeSection = 'dashboard';
   buitres: any[] = [];
+  filteredBuitres: any[] = [];
+  searchQuery = '';
   totalBuitres = 0;
   isLoading = false;
   successMessage = '';
@@ -56,6 +59,7 @@ export class AdminPanelComponent implements OnInit {
     this.buitresService.getPeople('', 'recent').subscribe({
       next: (buitres) => {
         this.buitres = buitres;
+        this.filteredBuitres = buitres;
         this.isLoading = false;
       },
       error: (err) => {
@@ -63,6 +67,18 @@ export class AdminPanelComponent implements OnInit {
         this.isLoading = false;
       }
     });
+  }
+
+  filterBuitres() {
+    const q = this.searchQuery.toLowerCase().trim();
+    if (!q) {
+      this.filteredBuitres = this.buitres;
+    } else {
+      this.filteredBuitres = this.buitres.filter(b =>
+        b.name?.toLowerCase().includes(q) ||
+        b.description?.toLowerCase().includes(q)
+      );
+    }
   }
 
   deleteBuitre(id: string, name: string) {

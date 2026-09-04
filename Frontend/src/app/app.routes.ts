@@ -27,6 +27,11 @@ export const routes: Routes = [
     loadComponent: () => import('./components/about/about.component').then(m => m.AboutComponent) 
   },
   { 
+    path: 'foro', 
+    loadComponent: () => import('./components/discussion/discussion.component').then(m => m.DiscussionComponent),
+    canActivate: [BuitresGuard]
+  },
+  { 
     path: 'discussion/thread/:id', 
     loadComponent: () => import('./components/thread-detail/thread-detail.component').then(m => m.ThreadDetailComponent) 
   },

@@ -39,12 +39,58 @@ export class MessageService {
 
   private activeConversationId: string | null = null;
   private currentEmail: string = '';
+  private notificationAudio: HTMLAudioElement | null = null;
 
   constructor(
     private http: HttpClient,
     private realtime: SupabaseRealtimeService
   ) {
     this.loadUserEmail();
+    this.initNotificationSound();
+  }
+
+  private initNotificationSound() {
+    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const duration = 0.15;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.frequency.value = 880;
+    osc.type = 'sine';
+    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+    osc.start(audioCtx.currentTime);
+    osc.stop(audioCtx.currentTime + duration);
+    audioCtx.close();
+  }
+
+  playNotificationSound() {
+    try {
+      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = 1000;
+      osc.type = 'sine';
+      gain.gain.setValueAtTime(0.8, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.2);
+
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.connect(gain2);
+      gain2.connect(ctx.destination);
+      osc2.frequency.value = 1300;
+      osc2.type = 'sine';
+      gain2.gain.setValueAtTime(0.6, ctx.currentTime + 0.1);
+      gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+      osc2.start(ctx.currentTime + 0.1);
+      osc2.stop(ctx.currentTime + 0.3);
+      setTimeout(() => ctx.close(), 500);
+    } catch (e) {}
   }
 
   private loadUserEmail() {
@@ -113,6 +159,7 @@ export class MessageService {
     this.realtime.subscribeToUnreadMessages(this.currentEmail, (msg) => {
       if (msg.conversation_id !== this.activeConversationId) {
         this.unreadCountSubject.next(this.unreadCountSubject.value + 1);
+        this.playNotificationSound();
       }
     });
 
